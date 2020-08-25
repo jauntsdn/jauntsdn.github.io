@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        .item_header {
+            color: #2196f3; font-weight: 400;
+            font-size: 16px; 
+            line-height:21px;
+            font-family: "Roboto Slab";
+        }
+        .item {
+            margin-bottom: 28px;
+            text-align: left;
+            line-height:21px;
+            font-size: 15px;
+            font-family: "Roboto Slab";
+            font-weight: 400;
+        }
+        a {
+            color: #2196f3;
+        }
+    </style>
+<head>
+    <link rel="icon" href="/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Slab:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <title>Message-streams</title>
+    
+    
+</head>
+<body>
+<div id="header"
+     style="border-top: 2px solid #2196f3;
+            min-height: 37pt;position: fixed;
+            border-bottom: 1pt solid #e7e7e7;
+            background-color: #ffffff;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1030;">
+</div>
+<main style="
+    display: block;
+    margin: auto;
+    padding: 0pt;
+    max-width: 500pt;
+    box-sizing: border-box;
+    text-align: center;">
+    <div style="transform: translateY(70pt);padding-bottom: 5pt;">
+         <img src="/img/mstreams-logo.svg" style="height: 24pt;margin-bottom: 20pt; margin-top: 0pt;"/>
+         <div class="item"><span class="item_header">SUMMARY.</span> Message-Streams / RSocket-JVM is very fast GRPC-like & GRPC-compatible services on JVM with rich streaming
+                model over multiple network transports <a href="https://github.com/jauntsdn/rsocket-jvm">[1]</a>.</div>    
+        <div class="item"><span class="item_header">MILLIONS.</span> Millions of requests/messages per core
+            with each interaction (request-response, server-stream, client-stream, bidi-stream, fire-and-forget). Million of simultaneous streams served with commodity PC.</div>
+        <div class="item"><span class="item_header">GRPC COMPATIBILITY.</span> High-performance networking with codegen / Protocol Buffers based RPC system having GRPC
+            compatibility & look-and-feel.</div>    
+        <div class="item"><span class="item_header">PLUGGABLE NETWORKING.</span> Data center: TCP, unix sockets, VM sockets; internet: GRPC, websockets, websockets-over-http2; control APIs: transcoding to plain old http/json.</div>    
+        
+        <div class="item"><span class="item_header">MULTIPLE APIS.</span> Request-response with CompletableFuture and virtual threads; traditional streaming with GRPC-stubs (StreamObserver), or reactive with smallrye-mutiny, rxjava, reactor <a href="https://github.com/jauntsdn/rsocket-jvm-interop-examples">[2]</a>.</div>   
+        <div class="item"><span class="item_header">FLEXIBLE DEPLOYMENT.</span> Both client & server may initiate requests. All internet transports (GRPC, websockets, websockets-over-http2, http/json) may be served over same port.</div>
+        <div class="item"><span class="item_header">API / RUNTIME SEPARATION.</span> Service APIs & RPC stubs (Message-Streams) are decoupled from library runtime (RSocket-JVM), which also
+            includes network transports, load estimators, load balancers and metrics <a href="https://github.com/jauntsdn/message-streams-futures-examples">[3]</a>.</div>
+        <div class="item"><span class="item_header">EFFICIENT.</span> Minimal per-message garbage production. Server graceful close support, coarse scheduler for timeouts, 
+            lean RPC metadata encoding.</div>    
+        <div class="item"><span class="item_header">LOAD BALANCING.</span> Transparent origin (RPC service) & proxy load estimation for cpu-efficient load
+            balancers.</div>
+        <div class="item"><span class="item_header">TINY FOOTPRINT & NATIVE.</span> On JVM minimal service is &lt;3MB, application image with JRE &lt;50MB, alpine container &lt;60MB. With GraalVM - single native binary &lt;30MB plus instant startup.</div>
+        
+        
+        
+        <div class="item"><span class="item_header">EXAMPLES.</span> 
+            Message-Streams-RPC futures example is available at <a href="https://github.com/jauntsdn/message-streams-futures-examples" target="_blank">[4]</a>, 
+            virtual threads RPC example at <a href="https://github.com/jauntsdn/messagestreams-virtualthreads-examples" target="_blank">[5]</a>, all libraries interop plus GRPC examples at <a href="https://github.com/jauntsdn/rsocket-jvm-interop-examples" target="_blank">[6]</a>.
+            Details in presentation at <a href="/mstreams/presentation" target="_blank">[7]</a>.
+        </div>
+        
+        <a style="padding-bottom: 50px;" href="/" rel="next">
+            <i class="fa fa-arrow-up"></i>
+        </a>
+    </div>
+</main>
+</body>
+</html>
+
+
