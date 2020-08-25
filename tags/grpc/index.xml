@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>grpc on JAUNTSDN</title>
+    <link>https://jauntsdn.github.io/tags/grpc/</link>
+    <description>Recent content in grpc on JAUNTSDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 20 May 2021 08:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://jauntsdn.github.io/tags/grpc/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</title>
+      <link>https://jauntsdn.github.io/post/rsocket-grpc/</link>
+      <pubDate>Thu, 20 May 2021 08:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-grpc/</guid>
+      <description>Exchanging millions of buffers per second with plain RSockets is not useful for business applications because they need structured data instead of raw bytes.
+That&amp;rsquo;s why there was RSocket-RPC - remote procedure call system on top of Protocol Buffers with language agnostic service definitions. It uses code-generation for performance equivalent to hand-written code.
+Protocol buffers have tiny on-wire overhead, acceptable performance and is native format of Grpc - important for interoperability and available tooling that can be used directly, or easily adapted.</description>
+    </item>
+    
+  </channel>
+</rss>

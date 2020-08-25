@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>JAUNTSDN</title>
+    <link>https://jauntsdn.github.io/mstreams/</link>
+    <description>Recent content on JAUNTSDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    
+	<atom:link href="https://jauntsdn.github.io/mstreams/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title></title>
+      <link>https://jauntsdn.github.io/mstreams/presentation/plugin/notes/speaker-view/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://jauntsdn.github.io/mstreams/presentation/plugin/notes/speaker-view/</guid>
+      <description>reveal.js - Speaker View  body { font-family: Helvetica; font-size: 18px; } #current-slide, #upcoming-slide, #speaker-controls { padding: 6px; box-sizing: border-box; -moz-box-sizing: border-box; } #current-slide iframe, #upcoming-slide iframe { width: 100%; height: 100%; border: 1px solid #ddd; } #current-slide .label, #upcoming-slide .label { position: absolute; top: 10px; left: 10px; z-index: 2; } #connection-status { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; padding: 30% 20% 20% 20%; font-size: 18px; color: #222; background: #fff; text-align: center; box-sizing: border-box; line-height: 1.</description>
+    </item>
+    
+  </channel>
+</rss>

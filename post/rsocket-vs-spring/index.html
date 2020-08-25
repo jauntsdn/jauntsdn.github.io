@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</h2>
+        <h5>September 3, 2021</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><p>Earlier this year we described <a href="https://jauntsdn.github.io/post/rsocket-million-streams-2/">weaknesses</a> of <code>Spring RSocket-java</code>
+implementation that resulted in awful throughput, latency &amp; garbage production: key metrics for core networking library.</p>
+<p>Latest <code>Spring-RSocket</code> uses <code>RSocket/RSocket-java</code> version 1.1.1, and wraps up almost a year of progress made on the library.</p>
+<p>The goal of this post is to re-evaluate that progress against both current <a href="https://jauntsdn.github.io/post/rsocket-grpc/">jauntsdn/RSocket-RPC</a> (not yet publicly available),
+and <code>grpc/grpc-java</code>.</p>
+<h3 id="jauntsdn-rsocket-rpc-vs-spring-rsocket-cbor-quantitative-comparison">Jauntsdn-RSocket-RPC vs Spring-RSocket-CBOR: quantitative comparison</h3>
+<p><code>jauntsdn/RSocket-RPC</code> is remote procedure call system using streaming libraries (GRPC-API or several reactive - including RSocket-reactor)
+for networking &amp; APIs, and Protocol Buffers as sole data format. It relies on code generation with protobuf C++ plugin extensions, and is compatible with GRPC.</p>
+<p>Spring-RSocket (version 2.5.3) offers reflection-heavy client and server on top of <code>RSocket-java</code>.
+Both are configured with <code>HttpMessageEncoder</code> and <code>HttpMessageDecoder</code> from spring&rsquo;s http stack. Each call starts with
+interpolated &ldquo;route&rdquo; template string, followed by message encoding/decoding operators chain (for client chain size varies from 7 for
+<code>request-response</code> to 14 for <code>request-channel</code>).</p>
+<p>Out of 2 serialization options suggested in their docs we choose CBOR instead of JSON as more compact so theoretically faster.</p>
+<p>Additionally GRPC-java (1.37) only setup is used as performance base line. Both client and server are configured with
+static flow control window of 1_000_000.</p>
+<p>Our objective is quick performance re-evaluation since <a href="https://jauntsdn.github.io/post/rsocket-million-streams-2/">1 million streams. part2</a>,
+so only single vCPU throughput is measured for 2 common interactions: request-stream (single infinite stream) and request-response
+(continuous window of requests).</p>
+<p>Payload sizes are selected as follows:<br>
+4 (practical minimum: packed telemetry), 140 (tweet in latin) bytes</p>
+<p>Tests were conducted on 12 vCPU commodity box running linux 5.4.0/OpenJDK 11.0.11, with non-TLS TCP transport.</p>
+<h3 id="request-stream">Request-stream</h3>
+<ul>
+<li>PACKED TELEMETRY MESSAGE (4 BYTES)</li>
+</ul>
+<p>jauntsdn/RSocket-RPC</p>
+<pre><code class="language-properties" data-lang="properties">11:33:17.378 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 3485145
+11:33:18.378 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 3458668
+11:33:19.378 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 3468615
+</code></pre><p>spring-RSocket-CBOR</p>
+<pre><code class="language-properties" data-lang="properties">2021-09-03 12:15:12.766  INFO 11603 --- [     parallel-2] s.r.stream.client.ClientApplication      : client received messages: 548060
+2021-09-03 12:15:13.766  INFO 11603 --- [     parallel-2] s.r.stream.client.ClientApplication      : client received messages: 541163
+2021-09-03 12:15:14.766  INFO 11603 --- [     parallel-2] s.r.stream.client.ClientApplication      : client received messages: 522535
+</code></pre><p>GRPC-Java</p>
+<pre><code class="language-properties" data-lang="properties">12:32:16.273 pool-2-thread-1 com.jauntsdn.grpc.stress_test.stream.Main  client received messages: 1667608
+12:32:17.273 pool-2-thread-1 com.jauntsdn.grpc.stress_test.stream.Main  client received messages: 1687596
+12:32:18.273 pool-2-thread-1 com.jauntsdn.grpc.stress_test.stream.Main  client received messages: 1657052
+</code></pre><ul>
+<li>TWEET MESSAGE (140 BYTES)</li>
+</ul>
+<p>jauntsdn/RSocket-RPC</p>
+<pre><code class="language-properties" data-lang="properties">12:21:18.751 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 2519878
+12:21:19.751 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 2426705
+12:21:20.737 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 2426704
+</code></pre><p>spring-RSocket-CBOR</p>
+<pre><code class="language-properties" data-lang="properties">2021-09-03 12:20:06.531  INFO 12357 --- [     parallel-2] s.r.stream.client.ClientApplication      : client received messages: 497637
+2021-09-03 12:20:07.531  INFO 12357 --- [     parallel-2] s.r.stream.client.ClientApplication      : client received messages: 493875
+2021-09-03 12:20:08.531  INFO 12357 --- [     parallel-2] s.r.stream.client.ClientApplication      : client received messages: 497627
+</code></pre><p>GRPC-Java</p>
+<pre><code class="language-properties" data-lang="properties">12:36:51.114 pool-2-thread-1 com.jauntsdn.grpc.stress_test.stream.Main  client received messages: 1004188
+12:36:52.114 pool-2-thread-1 com.jauntsdn.grpc.stress_test.stream.Main  client received messages: 1026791
+12:36:53.114 pool-2-thread-1 com.jauntsdn.grpc.stress_test.stream.Main  client received messages: 988619
+</code></pre><p>With request-streams spring-RSocket not only 6x slower (3.4M vs 0.55M) than jauntsdn-RSocket-RPC, but 2-3x slower than GRPC-java itself -
+&ldquo;legacy&rdquo; library It was aiming to supersede.</p>
+<h3 id="request-response">Request-response</h3>
+<ul>
+<li>PACKED TELEMETRY MESSAGE (4 BYTES)</li>
+</ul>
+<p>jauntsdn/RSocket-RPC</p>
+<pre><code class="language-properties" data-lang="properties">12:23:41.381 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1489591
+12:23:42.383 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1504273
+12:23:43.382 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1493177
+</code></pre><p>spring-RSocket-CBOR</p>
+<pre><code class="language-properties" data-lang="properties">2021-09-03 12:23:49.258  INFO 12745 --- [     parallel-2] s.r.response.client.ClientApplication    : client received messages: 101036
+2021-09-03 12:23:50.258  INFO 12745 --- [     parallel-2] s.r.response.client.ClientApplication    : client received messages: 102121
+2021-09-03 12:23:51.258  INFO 12745 --- [     parallel-2] s.r.response.client.ClientApplication    : client received messages: 102134
+</code></pre><p>GRPC-Java</p>
+<pre><code class="language-properties" data-lang="properties">12:38:15.146 pool-2-thread-1 com.jauntsdn.grpc.stress_test.response.Main client received messages: 89277
+12:38:16.146 pool-2-thread-1 com.jauntsdn.grpc.stress_test.response.Main client received messages: 91057
+12:38:17.146 pool-2-thread-1 com.jauntsdn.grpc.stress_test.response.Main client received messages: 91510
+</code></pre><ul>
+<li>TWEET MESSAGE (140 BYTES)</li>
+</ul>
+<p>jauntsdn/RSocket-RPC</p>
+<pre><code class="language-properties" data-lang="properties">12:24:34.828 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1072298
+12:24:35.829 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1065523
+12:24:36.828 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1058572
+</code></pre><p>spring-RSocket-CBOR</p>
+<pre><code class="language-properties" data-lang="properties">2021-09-03 12:25:13.025  INFO 13023 --- [     parallel-2] s.r.response.client.ClientApplication    : client received messages: 93324
+2021-09-03 12:25:14.025  INFO 13023 --- [     parallel-2] s.r.response.client.ClientApplication    : client received messages: 92235
+2021-09-03 12:25:15.025  INFO 13023 --- [     parallel-2] s.r.response.client.ClientApplication    : client received messages: 94413
+</code></pre><p>GRPC-Java</p>
+<pre><code class="language-properties" data-lang="properties">12:43:11.855 pool-2-thread-1 com.jauntsdn.grpc.stress_test.response.Main client received messages: 85854
+12:43:12.855 pool-2-thread-1 com.jauntsdn.grpc.stress_test.response.Main client received messages: 82733
+12:43:13.855 pool-2-thread-1 com.jauntsdn.grpc.stress_test.response.Main client received messages: 82587
+</code></pre><p>On request-response situation turned bleak very quickly for <code>spring-RSocket</code>: 10x-14x slower (1.4M vs 0.1M) than jauntsdn-RSocket-RPC.
+I didn&rsquo;t believe the measurements at first, so had to double check - setup was correct.</p>
+<p>On the bright side, <code>spring-RSocket</code> holds on par against GRPC - with one digit percent advantage.</p>
+<p>Let&rsquo;s look at these results from practical point - with current Spring, 80% (request-stream) to 90% (request-response) of CPU time is wasted
+processing <code>RSocket/RSocket-java</code> &amp; framework internals - share of the cloud infra money that are turned into heat on datacenter hardware.</p>
+<h3 id="vulnerabilities">Vulnerabilities</h3>
+<p>Several recent cases <a href="https://github.com/spring-projects/spring-framework/issues/27373">1</a>, <a href="https://github.com/spring-projects/spring-framework/issues/27427">2</a>,
+<a href="https://github.com/spring-projects/spring-framework/issues/27428">3</a>, <a href="https://github.com/spring-projects/spring-framework/issues/27462">4</a> demonstrate that latest Spring <code>RSocket/RSocket-java</code> servers are still subject to
+trivial denial-of-service attacks, and look like implemented for happy case only.</p>
+<p>3 interactions (request-response, request-stream, request-channel) of 4 may be used for server memory overflow,
+plus one case of server file descriptors exhaustion.</p>
+<p>They are similar in spirit to those reported last year for general-availability version of <code>RSocket/RSocket-java</code>
+(<a href="https://jauntsdn.github.io/post/rsocket-million-streams-1/">enumerated at top of the post</a>).</p>
+<h3 id="spring-rsocket-false-promise">Spring-RSocket: false promise</h3>
+<p>With Spring and RSocket/RSocket-java, specialized binary, purpose-built cloud L5 protocol has worse performance
+<em>over TCP</em> than pre-existing GRPC-java <em>over http2</em> - general purpose internet protocol.</p>
+<p>It leaves false impression of <em>RSocket-as-protocol</em> deficiency, while in reality It solely reflects engineering capacity,
+goals &amp; decisions of organization behind <code>Spring</code> &amp; <code>RSocket/RSocket-java</code>.</p>
+<p><em>RSocket-as-protocol</em> is capable of times better throughput with very small latency/GC pressure compared to GRPC -
+if <a href="https://jauntsdn.github.io/post/rsocket-jvm/">proper</a> implementation is in place.</p>
+<p>When coupled with Reactive-Streams library (at least 3 of production ready quality available for JVM), RSocket enables
+bidirectional exchange of non-blocking message streams across processes (unix sockets) and networks (tcp, websockets, http2, udp/quic),
+at rate of millions messages per core, with few milliseconds latency.</p>
+<p>Spring&rsquo;s RSocket state is caused by questionable foundation of <code>RSocket/RSocket-java</code>, bloated metadata encoding,
+switching from approach of single data format &amp; codegen to data format abstraction plus reflection - which cannot
+be efficient or optimized due to substantial difference between data formats.</p>
+<p>Note that both <code>jauntsdn/RSocket-RPC-reactor</code> and Spring <code>RSocket/RSocket-java</code> use same non-blocking primitives
+provided by <code>netty</code> &amp; <code>project-reactor</code>, but have 5x-10x throughput difference - textbook example on consequences
+if proper design, scope &amp; conservative dependencies are neglected.</p>
+<h3 id="unification-vs-specialization">Unification vs specialization</h3>
+<p>Unification vs specialization is a tradeoff: in particular for data, with former It is not possible to have
+&ldquo;universal&rdquo; optimizations, effective on multiple considerably different data formats - performance is traded
+for pluggability.</p>
+<p>As enterprise applications framework Spring follows unification paradigm from its inception, so every piece of It
+is designed pluggable - at the expense of efficiency.</p>
+<p>Unfortunately, as soon as server applications started being deployed to thoroughly metered 3rd party cloud VMs,
+efficiency and resources usage became significant concern.</p>
+<p>That&rsquo;s why <code>jauntsdn/RSocket-RPC</code> specializes on single data format - Protocol Buffers. It is compact, fast, widely
+supported and native for GRPC.</p>
+<p>In case of spring-RSocket substituting codec with protobuf did not increase throughput, and also did not make It directly
+accessible to GRPC clients, despite proven RSocket-GRPC streams <a href="https://jauntsdn.github.io/post/rsocket-grpc/">interoperability</a>.</p>
+<h3 id="jauntsdn-rsocket-rpc-vs-grpc-qualitative-comparison">Jauntsdn-RSocket-RPC vs GRPC: qualitative comparison</h3>
+<p>Both jauntsdn/RSocket-RPC and GRPC are based on Protocol Buffers (protobuf). They rely on protobuf compiler&rsquo;s service extensions
+framework to generate client &amp; server stubs from language agnostic service and message definitions.</p>
+<p>GRPC service APIs are callbacks based, while <code>jauntsdn/RSocket-RPC</code> APIs are Publisher based: which means they are composable,
+and represent errors and cancellations as first class concept.</p>
+<p>Performance evaluation of RSocket-RPC was presented <a href="https://jauntsdn.github.io/post/rsocket-grpc/">earlier</a>,
+let&rsquo;s continue with short list of qualitative differences between the two:</p>
+<ul>
+<li>jauntsdn/RSocket-RPC has indisputable performance advantage in key metrics: throughput, latency (request/message level backpressure),
+garbage production</li>
+<li>jauntsdn/RSocket-RPC understands GRPC, but not vise versa</li>
+<li>jauntsdn/RSocket-RPC is compatible with web browsers (if combined with websocket or websocket-over-http2 transport)</li>
+<li>jauntsdn/RSocket-RPC is symmetric - both client (connection initiator) and server may start requests, while with GRPC is asymmetric:
+only client may start requests.</li>
+<li>jauntsdn/RSocket-RPC client handshake may have payload containing arbitrary data, while with GRPC this data must be duplicated for each
+request.</li>
+<li>jauntsdn/RSocket-RPC may open multiple RSockets per connection with http2 (websocket-over-http2) transport,
+while GRPC-java supports at most 1 channel per connection.</li>
+<li>jauntsdn/RSocket-RPC can use any reliable byte transport: TCP, Unix Sockets, VM sockets, websockets etc, while GRPC is http2 only</li>
+<li>jauntsdn/RSocket-RPC may be transparently routed by existing API gateways/proxies if backed by IETF standard protocol:
+e.g. websocket or websocket-over-http2, while GRPC is proprietary protocol on top of http2 framing.</li>
+<li>jauntsdn/RSocket-RPC data &amp; metadata use same format as GRPC - Protocol buffers, so existing libraries &amp; tools are available
+from Protobuf ecosystem.</li>
+</ul>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-jvm/">RSocket-JVM: streamlining implementation for each vendor platform</a></h4>
+    <h5>April 22, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

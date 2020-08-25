@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>📌 Summary: alternative RSocket library for high performance network applications on JVM</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">📌 Summary: alternative RSocket library for high performance network applications on JVM</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>📌 Summary: alternative RSocket library for high performance network applications on JVM</h2>
+        <h5>February 1, 2023</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><h3 id="summary">Summary</h3>
+<ul>
+<li>lean &amp; very fast GRPC-like <a href="https://github.com/jauntsdn/rsocket-jvm-interop-examples/tree/feature/oss">services</a> on JVM with rich streaming model over multiple data-center and internet transports;</li>
+<li>multiple APIs: CompletableFuture &amp; virtual threads; traditional streaming GRPC-stub (StreamObserver), or reactive with smallrye-mutiny, rxjava, reactor</li>
+<li>pluggable networking: tcp, unix sockets, vm sockets; grpc, websockets, websockets-over-http2;</li>
+<li>service APIs / codegen stubs (Message-Streams) are split from library runtime (RSocket-JVM, including network transports, load estimators, load balancers,   metrics)</li>
+<li>transparent origin (RPC) &amp; proxy load estimation for low-cost yet efficient load balancers;</li>
+<li>native image support with graalvm.</li>
+</ul>
+<p>Project consists of API modules for each vendor library - <code>Message-Streams</code>, and respective runtime implementations - <code>RSocket-JVM</code>.</p>
+<p><code>Message-Streams</code> includes RPC: code-generation based remote procedure call system on top of Protocol Buffers.</p>
+<p><code>Message-Streams</code> sources are available on <a href="https://github.com/jauntsdn/rsocket-jvm">github</a>, and binaries are
+published on MavenCentral.</p>
+<p>RSocket is low latency/high throughput L5 network protocol intended for high-performance services communication.
+It is transport agnostic and may run on top of any reliable byte stream transport.</p>
+<h3 id="fast-alternative-rsocket-on-jvm">Fast alternative RSocket on JVM</h3>
+<p>Several problems were present in official RSocket/RSocket-java library:</p>
+<ul>
+<li>low performance and excessive garbage production, as described in <a href="https://jauntsdn.github.io/post/rsocket-million-streams-2/">1 million streams. part2</a>.
+Official RSocket/RSocket-java/RSocket-RPC performed similar to Http2/netty based GPRC, and did not scale on big hosts.</li>
+<li>no reusable code for other vendor implementations: core features, transports, metrics were coded with Pivotal libraries
+(e.g. project-reactor, reactor-netty and micrometer).</li>
+<li>vulnerabilities outlined in <a href="https://jauntsdn.github.io/post/rsocket-million-streams-1/">1 million streams. part1</a>,
+recently continued with <a href="https://github.com/spring-projects/spring-framework/issues/27373">1</a>,
+<a href="https://github.com/spring-projects/spring-framework/issues/27427">2</a>,
+<a href="https://github.com/spring-projects/spring-framework/issues/27428">3</a>,
+<a href="https://github.com/spring-projects/spring-framework/issues/27462">4</a> - 3 of 4 interactions (all except fire-and-forget) may
+be used for trivial denial-of-service of RSocket/RSocket-java servers.</li>
+<li>RSocket/RSocket-RPC abandoned in favor of &ldquo;Spring way&rdquo; of data format abstraction, and reflection at runtime instead of code generation.</li>
+</ul>
+<h3 id="message-streams-with-flow-control">Message Streams with flow control</h3>
+<p>Protocol offers rich set of interactions modelled as composable streams of binary messages, with flow control, error handling and cancellation as first-class concepts:</p>
+<p>fire-and-forget (1:0), request-response (1:1), request-stream (1:n), request-channel (n:n).</p>
+<p>Interactions are exposed to end user with <code>MessageStreams</code> API.</p>
+<h3 id="traditional-streaming">Traditional streaming</h3>
+<p>GRPC-stubs (StreamObserver) API support allows drop-in replacement of GRPC-java in services for significantly better throughput.</p>
+<pre><code class="language-properties" data-lang="properties">interface MessageStreams {
+  void requestResponse(Message message, StreamObserver&lt;Message&gt; responseObserver);
+  void requestStream(Message message, StreamObserver&lt;Message&gt; responseObserver);
+  StreamObserver&lt;Message&gt; requestChannel(StreamObserver&lt;Message&gt; responseObserver);
+  void fireAndForget(Message message, StreamObserver&lt;Message&gt; responseObserver);
+}  
+</code></pre><h3 id="reactive-streams">Reactive streams</h3>
+<p>Reactive Streams conformance makes protocol compatible with project-reactor, smallrye-mutiny and rxjava3</p>
+<pre><code class="language-properties" data-lang="properties">interface MessageStreams {
+  Publisher&lt;Message&gt; requestResponse(Message message);
+  Publisher&lt;Message&gt; requestStream(Message message);
+  Publisher&lt;Message&gt; requestChannel(Publisher&lt;Message&gt; messages);
+  Publisher&lt;Void&gt; fireAndForget(Message message);
+}
+</code></pre><p>This library demonstrates throughput of up to millions of messages per second / per vCPU with every interaction - more details below.</p>
+<h3 id="rsocket-jvm">RSocket-JVM</h3>
+<p>Library relies on shared protocol core with minimal dependencies (only netty-buffer) for use with
+<a href="https://jauntsdn.github.io/post/rsocket-jvm/">vendor libraries</a> on JVM.</p>
+<p>RSocket-JVM is currently comprised of JDK only RSocket-futures for request-response (CompletableFuture), traditional streaming with RSocket-GRPC (GRPC-stub), several flavors of reactive: RSocket-rxjava (rxjava3), RSocket-reactor (project-reactor) and RSocket-mutiny (smallrye-mutiny).</p>
+<figure>
+    <img src="/img/trisocket.png"/> 
+</figure>
+
+<p>Notable features:</p>
+<ul>
+<li>substantially higher performance, tiny per message garbage production. It is capable of serving 1 million of simultaneous
+streams with mid-range commodity PC (<a href="https://jauntsdn.github.io/post/rsocket-million-streams-2/">1 million streams.part2</a>).</li>
+</ul>
+<pre><code class="language-properties" data-lang="properties">         message size,bytes    8(same payload)        8             128            512
+
+request-response                     2.2m            1.7m           1.6m          1.3m
+request-stream                       3.5m            3.2m           3.2m          3.2m
+request-channel                      4.8m            3.2m           3.1m          2.4m
+</code></pre><p>Table 1. Single vCPU RSocket throughput (project-reactor, non-tls, TCP EPOLL with linux 5.4.0, jdk11),
+millions of messages per second.</p>
+<ul>
+<li>requests leasing for circuit breaking, adaptive latency-based load estimation that enables efficient
+lightweight load balancers.</li>
+<li>request ranks concept, used by load estimator to assist with load balancing</li>
+<li>graceful close of both clients and server, scalable server keep-alive support,
+lightweight coarse scheduler.</li>
+<li>built-in metrics model reworked so only tiny, practically useful set of metrics is published.</li>
+</ul>
+<h3 id="grpc-compatibility">GRPC compatibility</h3>
+<p><code>jauntsdn/RSocket</code> and <code>jauntsdn/RSocket-RPC</code> is compatible with GRPC: protocol design allows its streams to accommodate http2 streams.
+Compatibility was verified with <a href="https://jauntsdn.github.io/post/rsocket-grpc/">RSocket-GRPC</a> transport, observed performance characteristics were identical
+to official grpc-java only setup.</p>
+<h3 id="rpc-for-application-services">RPC for application services</h3>
+<p><code>jauntsdn/RSocket-RPC</code> is RPC system based on Message-Streams &amp; Protocol Buffers. It relies on code generation with protobuf C++ plugin extensions and is compatible with GRPC.</p>
+<p>Notable features:</p>
+<ul>
+<li>optimal off-heap buffers utilization, compact rpc call encoding, default service concept for small request on-wire overhead</li>
+<li>request ranks, which are used by load estimator and assist with load balancing</li>
+<li>idempotent requests</li>
+<li>simple metadata in form of ASCII encoded key-value pairs (headers)</li>
+<li>instrumentation with no binary dependency on Micrometer or OpenTracing</li>
+</ul>
+<p>The result is significantly higher performance: millions of messages per second per core, with each interaction.</p>
+<pre><code class="language-properties" data-lang="properties">         message size,bytes          8             128            512
+
+request-response                    1.45m          1.0m          0.55m
+request-stream                      3.3m           2.4m          0.9m
+request-channel                     3.5m           2.4m          1.25m
+</code></pre><p>Table 2. Single vCPU RSocket-RPC throughput (project-reactor, non-tls, TCP EPOLL with linux 5.4.0, jdk11),
+millions of messages per second.</p>
+<h3 id="multiple-network-transports">Multiple network transports</h3>
+<p>RSocket is transport agnostic, and runs on top of any reliable byte stream transport.
+<code>jauntsdn/RSocket</code> project hosts several transports, shared &amp; directly usable by each <code>RSocket-JVM</code> vendor specific library:</p>
+<ul>
+<li>
+<p>TCP, unix domain sockets transports: known efficient byte stream protocols for datacenter / inter-process communication.</p>
+</li>
+<li>
+<p>Http based transports for interop:</p>
+<ul>
+<li>
+<p><a href="https://jauntsdn.github.io/post/rsocket-grpc/">GRPC-RSocketRPC</a> server transport for communication with internet clients / external services.</p>
+</li>
+<li>
+<p><a href="https://jauntsdn.github.io/post/netty-websocket-http1/">WebSocket-over-http1 (rfc6455)</a>, <a href="https://jauntsdn.github.io/post/netty-websocket-http2/">WebSocket-over-http2 (rfc8441)</a> for cross-cloud
+communication with Internet Standards transports.</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="load-estimation">Load estimation</h3>
+<p>Network/service latency based load estimation for RSocket &amp; RSocket-RPC with <a href="https://jauntsdn.github.io/post/rsocket-lease-concurrency-limiting/">requests leasing</a>,
+which enables low-cost yet efficient load balancers.</p>
+<h3 id="source-codebinaries">Source code/binaries</h3>
+<p><code>Message-Streams</code> (RSocket-JVM API) sources are available on <a href="https://github.com/jauntsdn/rsocket-jvm">github</a>, and binaries are
+published on MavenCentral.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-jvm/">RSocket-JVM: streamlining implementation for each vendor platform</a></h4>
+    <h5>April 22, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

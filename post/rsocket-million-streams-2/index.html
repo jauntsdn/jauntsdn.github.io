@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Serving one million streams. Part 2. Double performance over original RSocket library</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">Serving one million streams. Part 2. Double performance over original RSocket library</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>Serving one million streams. Part 2. Double performance over original RSocket library</h2>
+        <h5>January 20, 2021</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><p>New year break is good time for continuing on topic of <a href="https://jauntsdn.github.io/post/rsocket-million-streams-1/">one million of streams</a> -
+serving huge amount of RSocket streams simultaneously with single, mid-level commodity computer.</p>
+<p>The original library gave in around 500k streams - mark where server was still stable, at whopping 500-600 MBytes/s allocation rate - unexpected
+numbers for RSockets just sending same byte buffer periodically, using library advertising zero-copy capability.</p>
+<p>Interesting question is whether we hit natural limit, caused by current state of JVM runtime and libraries, or is a consequence
+of design choices driven at large by &ldquo;ideological&rdquo; and marketing motives
+that eventually resulted in implementation having significant parts happen to exist
+just for burning CPU cycles - both directly and through garbage collection?</p>
+<p>Let&rsquo;s start with the numbers:  performance comparison of original <code>rsocket/rsocket-java</code> library
+versus <code>jauntsdn/rsocket-java</code> redesigned with pragmatics-first approach.</p>
+<h3 id="numbers">Numbers</h3>
+<p>Tests were performed on the same hardware described in <a href="https://jauntsdn.github.io/post/rsocket-million-streams-1/">first part</a>
+of report, using TCP for transport. Host box is 16 vCPU / 32 gb RAM; 8vCPU/16gb is allocated for server,
+and 4vCPU/8gb - for each of 2 clients.</p>
+<h3 id="500k">500k</h3>
+<p>500k streams over 5k connections; graphs show server active streams and CPU usage, respectively</p>
+<p><figure>
+    <img src="/img/500k-streams-part2.png"/> 
+</figure>
+<br>
+<figure>
+    <img src="/img/500k-cpu-part2.png"/> 
+</figure>
+</p>
+<p>Server based on redesigned library consumes 25% CPU vs 50% CPU original (<a href="https://jauntsdn.github.io/post/rsocket-million-streams-1/">part 1: TCP, 500K simultaneous streams</a>), yields 2x improvement.</p>
+<h3 id="1000k">1000k</h3>
+<p>1000k streams over 10k connections; graphs show server active streams and CPU usage, respectively</p>
+<p><figure>
+    <img src="/img/1000k-streams-part2.png"/> 
+</figure>
+<br>
+<figure>
+    <img src="/img/1000k-cpu-part2.png"/> 
+</figure>
+</p>
+<p>Test server is stable while handling 1 million of simultaneous streams
+at 60% CPU usage (and 80% host CPU, which also includes 2 clients) - value is comparable to 50% CPU with
+original library at only 500k streams.</p>
+<p>Graphs demonstrate that 1 million streams goal is met with new implementation while consistently using 2 times less CPU.</p>
+<p>Let&rsquo;s take a look at server heap allocation rates.</p>
+<figure>
+    <img src="/img/1000k-alloc-part2.png"/> 
+</figure>
+
+<p>Allocation rate peaked at only 50 MBytes/s - quite an improvement over 800 MBytes/s (just on ~600k-700k streams)
+of original library.</p>
+<p>Given that streams interval is 1 sec, this corresponds to 50 MBytes allocated on heap per 1 million messages,
+or at most 50 bytes per message sent.</p>
+<h3 id="the-cost-of-reactive">The cost of reactive</h3>
+<p><code>Rxjava/project-reactor</code> style libraries are useful because they enable lock-free asynchronous message processing
+with user-friendly, fluent &ldquo;functional&rdquo;-style interface, are composable and offer good throughput-latency tradeoff.</p>
+<p>This makes them a good choice for user-facing APIs on network applications. However, It does not necessarily
+hold true for internal components underneath API surface - fluent style and composability are not free.</p>
+<p>Some operators, e.g. <a href="https://github.com/reactor/reactor-core/blob/69df177c5b98d3b9ac4260691d0cadc903522967/reactor-core/src/main/java/reactor/core/publisher/FluxFlatMap.java#L573">flatMap</a>
+contain non-trivial logic and do 2 CAS updates per message, others (<a href="https://github.com/reactor/reactor-core/blob/69df177c5b98d3b9ac4260691d0cadc903522967/reactor-core/src/main/java/reactor/core/publisher/FluxGroupBy.java#L659">groupBy</a>)
+additionally exchange each message via SPSC-queue. On loaded servers with tens of thousands streams
+It is common to see 10% of total CPU time spent inside <code>flatMap</code> itself!</p>
+<p><strong>Reactive everywhere</strong></p>
+<p>Original library <code>rsocket/rsocket-java</code> followed reactive dogma little too rigorously, and <a href="https://github.com/rsocket/rsocket-java/blob/1.0.3/rsocket-core/src/main/java/io/rsocket/DuplexConnection.java">DuplexConnection</a> -
+its main transport interface, internal component for sending and receiving frames - exposes APIs as <code>Publishers</code> chained
+with said <code>flatMap</code> and <code>groupBy</code> for processing inbound and outbound messages.</p>
+<p>This dependency also forces every transport to implement <code>reactor-netty</code> adapters for a single purpose of sending/receiving raw bytes,
+even though <code>reactor-netty</code> primary use case is HTTP.</p>
+<p>Let&rsquo;s get into details.</p>
+<p>Reactive type in send method <a href="https://github.com/rsocket/rsocket-java/blob/d047c59809dd65db86ebd3d76924e692b402c6e5/rsocket-core/src/main/java/io/rsocket/DuplexConnection.java#L43">DuplexConnection.send(frames)</a>
+is redundant - It accepts <code>Publisher&lt;ByteBuf&gt;</code> of frames instead of simple synchronous method:</p>
+<pre><code class="language-properties" data-lang="properties">void send(ByteBuf frame);
+</code></pre><p>Reactive type in receive method <a href="https://github.com/rsocket/rsocket-java/blob/d047c59809dd65db86ebd3d76924e692b402c6e5/rsocket-core/src/main/java/io/rsocket/DuplexConnection.java#L80">DuplexConnection.receive()</a>
+is redundant -  It returns <code>Flux&lt;ByteBuf&gt;</code> instead of method with callback:</p>
+<pre><code class="language-properties" data-lang="properties">void receive(OnReceive onReceive);
+
+interface OnReceive {
+
+    void receive(ByteBuf frame);
+}
+</code></pre><p>RSocket itself is lightweight protocol and does not require asynchronous processing of messages, hence <code>Publisher</code> instead
+of synchronous function is unnecessary complication.</p>
+<p>One can argue <code>Publisher</code> on <code>DuplexConnection.send()/receive()</code> are for flow control, but there is upper bound
+for pending messages already, provided by protocol itself: outstanding streams are limited with request leases,
+and outstanding stream messages - by reactive-streams semantics of RSocket.</p>
+<p><strong>Odd assumptions</strong></p>
+<p><code>RSocket</code> is intended as foundation for messaging systems, and they are designed as single-producer systems.
+Multi-producer designs are expensive because at scale of million+ messages managing contention takes unacceptable
+amount of CPU time compared to message processing itself.</p>
+<p><code>RSocket-java</code> relies on Netty as backbone for its frame transport implementations.</p>
+<p>Netty is go-to messaging/networking toolkit on JVM, and It follows <code>event loop</code> pattern - inbound messages
+of one connection are delivered on same thread - single producer. On outbound pipeline most of Netty components
+also aware of event loop so writes have low overhead.</p>
+<p>However there is no concept of event loop in original <code>rsocket/RSocket-java</code> - outbound frames are exchanged via
+<a href="https://github.com/rsocket/rsocket-java/blob/d047c59809dd65db86ebd3d76924e692b402c6e5/rsocket-core/src/main/java/io/rsocket/internal/UnboundedProcessor.java#L190">MPMC queue plus 2 CAS writes</a>,
+even if every outbound frame is on event loop thread.</p>
+<p>This is not hypothetical situation - proxy/loadbalancer applications naturally have both inbound and outbound messages
+produced on same thread.</p>
+<h3 id="accidental-inefficiency">Accidental inefficiency</h3>
+<p>Inbound and outbound streams state is stored in a map with all methods declared <a href="https://github.com/rsocket/rsocket-java/blob/d047c59809dd65db86ebd3d76924e692b402c6e5/rsocket-core/src/main/java/io/rsocket/core/RSocketRequester.java#L134">synchronized</a>.</p>
+<p>It is 2 ways problematic - first inbound frames apriori can&rsquo;t race because they are published on event loop hence
+no locking needed - still noncontended locks are not free. Then this adds contention between outbound request frames
+and inbound frames for no particular reason. Code that appears like highly optimized for throughput
+lives next to locks on a hot path.</p>
+<p>Because <code>DuplexConnection.receive()</code> returns <code>Flux&lt;ByteBuf&gt;</code> of incoming frames, part of processing logic is
+implemented as chain of operators inside <a href="https://github.com/rsocket/rsocket-java/blob/d047c59809dd65db86ebd3d76924e692b402c6e5/rsocket-core/src/main/java/io/rsocket/internal/ClientServerInputMultiplexer.java#L82">ClientServerInputMultiplexer</a>.</p>
+<p>Unfortunately It does so with aforementioned <code>flatMap</code>, <code>groupBy</code> and another <code>Processor</code> having
+good old 2 CAS operations and MPMC queue exchange.
+This chain of operators is replaceable by plain function call.</p>
+<p>Frame properties are read from memory multiple times for each message: streamId, frameType, flags, data &amp;
+metadata - instead of reading once and pass down callstack.</p>
+<p>Also there is needless allocation for each outbound frame with payload caused by <a href="https://github.com/rsocket/rsocket-java/blob/d047c59809dd65db86ebd3d76924e692b402c6e5/rsocket-core/src/main/java/io/rsocket/frame/FrameBodyCodec.java#L76">CompositeByteBuf</a>.</p>
+<h3 id="complexity">Complexity</h3>
+<p><code>reactor-netty</code> is main networking library in Spring/reactive ecosystem. Spring framework core ideas are flexibility
+and productivity - virtually any component is pluggable, many components are available out of the box.</p>
+<p><code>reactor-netty</code> follows same line in spirit as new features and configuration options are added to project on first user request.</p>
+<p>This leaves an impression of unbounded scope - <code>reactor-netty</code> is not just thin <code>reactor-core</code> adapter
+around Netty&rsquo;s channels.</p>
+<p>Internal structure wise, It has layers of functions-calling-functions of Monos/Fluxes,
+and other clever constructs manifesting in screen-sized call-stacks - net contributing only to wasted CPU cycles and
+allocation rates.</p>
+<p>Usability wise, there is unfortunate decision to combine reference-counted offheap memory with async streams of
+<code>reactor-project</code> in <em>user-facing</em> APIs. Decision became burden on its users - who now are required detailed knowledge
+of reactive-streams rules, <code>project-reactor</code> and <code>reactor-netty</code> primitives lifecycle to not leak native memory
+while doing common client/server tasks.</p>
+<h3 id="redesign">Redesign</h3>
+<p>The goal of rework was addressing problems outlined above, let&rsquo;s enumerate main points:</p>
+<ul>
+<li>
+<p>Adopt straightforward design across library where every component exists for good reason;
+external dependencies are lean and justified.</p>
+</li>
+<li>
+<p>Replace reactive types with simple function calls / callbacks on all transports.</p>
+</li>
+<li>
+<p>Drop <code>reactor-netty</code> from transport, use Netty directly since It gives fine-grained control over connection bytestreams,
+removes the need to workaround reactive &ldquo;ballast&rdquo; that gives no value in transport context, plus leaner dependencies
+that are more stable, easier to understand and maintain.</p>
+</li>
+<li>
+<p>Simplify hot paths of sending and receiving frames: header attributes are calculated once,
+drop necessity for <code>CompositeByteBuffers</code>, drop <code>ClientServerInputMultiplexer</code> - manifestation of
+operators abuse is also replaced by a single plain function.</p>
+</li>
+<li>
+<p>RSocket inbound streams - bridges from plain callbacks to reactive interactions(request-stream, request-channel etc) -
+were reimplemented assuming event loop execution model with single producer.</p>
+</li>
+<li>
+<p>Drop locks on a hot path of accessing streams maps - this is consequence of Netty event loop awareness in both streams
+and transport.</p>
+</li>
+</ul>
+<h3 id="conclusion">Conclusion</h3>
+<p>Keep-it-simple approach, well articulated scope, lean dependencies are necessary components for software infrastructure
+library.</p>
+<p>If principles are not respected, library ends up comprised from more-than-necessary components
+each having hardly noticeable deficiencies, once stacked together contribute considerable amount to CPU waste.</p>
+<p>In this particular case waste was 50% - and is directly reflected in hardware costs of each application on top of It.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

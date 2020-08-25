@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>io_uring on JAUNT.SDN</title>
+    <link>tags/io_uring/</link>
+    <description>Recent content in io_uring on JAUNT.SDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 02 Mar 2019 08:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="tags/io_uring/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>IO_URING for Netty based RPC: quick analysis</title>
+      <link>post/rpc-iouring/</link>
+      <pubDate>Sat, 02 Mar 2019 08:00:00 +0200</pubDate>
+      
+      <guid>post/rpc-iouring/</guid>
+      <description>Netty IO_URING based transport was recently released as incubator project. Several sources have reported substantial performance gains with It, including Netty team TCP echo test results that demonstrated 2x better throughput compared to EPOLL.
+The goal of this post is CPU and memory performance evaluation of IO_URING in RPC library implemented with Netty on top of TCP, and comparison against EPOLL IO.
+It focuses on two use cases:
+  backend service: few dozens of connections, each serving ~1000 concurrent streams of few dozens messages each</description>
+    </item>
+    
+  </channel>
+</rss>

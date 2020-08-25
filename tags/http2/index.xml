@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>http2 on JAUNTSDN</title>
+    <link>https://jauntsdn.github.io/tags/http2/</link>
+    <description>Recent content in http2 on JAUNTSDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 30 Jul 2020 11:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://jauntsdn.github.io/tags/http2/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>WebSockets over http/2: implementing RFC8441 with Netty</title>
+      <link>https://jauntsdn.github.io/post/netty-websocket-http2/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/netty-websocket-http2/</guid>
+      <description>Today I&amp;rsquo;d like to introduce you to netty-websocket-http2 - implementation of websockets-over-http2, first release of which is about to land on the Maven Central.
+Novel protocol graduated out of draft phase in September 2018, and is one of the smallest RFCs I&amp;rsquo;ve ever seen - just 4 pages of actual specification.
+Despite tiny size It opens some interesting possibilities - for both clients and servers.
+Protocol defines Extended CONNECT Method - mechanism for establishing byte stream tunnel over single http2 stream, and addresses biggest flaw of websocket over http1 - need for a separate tcp connection per websocket.</description>
+    </item>
+    
+  </channel>
+</rss>

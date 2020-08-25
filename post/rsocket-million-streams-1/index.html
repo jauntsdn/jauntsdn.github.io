@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Serving one million streams. Part 1. RSocket limits on the JVM</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">Serving one million streams. Part 1. RSocket limits on the JVM</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>Serving one million streams. Part 1. RSocket limits on the JVM</h2>
+        <h5>June 24, 2020</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><p>One of the interesting topics is estimation of RSocket limits in setup that approximates gateway serving tens of thousands clients.</p>
+<p>There are numerous reports focusing on few streams over single connection, with emphasis on huge throughput.
+However this mode is not intrinsical for real server. Even though gateways are more likely to be cpu bound than IO bound,
+we can relax this assumption by making server logic trivial (just echo back incoming messages), to see how RSocket
+behaves under idealized conditions when major resource consumption is related to IO.</p>
+<p>We use <a href="https://github.com/jauntsdn/rsocket">jauntsdn/rsocket</a> to have http2 based transports,
+and metrics that are actually useful (<code>RSocket/RSocket-java</code> metrics do not distinguish inbound/outbound messages,
+generate redundant time series and seems were not designed with efficient querying in mind - at least for <code>Prometheus</code> case.
+Also numerous vulnerabilities (<a href="https://github.com/rsocket/rsocket-java/issues/865">1</a> ,
+<a href="https://github.com/rsocket/rsocket-java/issues/884">2</a>,
+<a href="https://github.com/rsocket/rsocket-java/issues/887">3</a>, <a href="https://github.com/rsocket/rsocket-java/issues/895">4</a>,
+<a href="https://github.com/rsocket/rsocket-java/issues/898">5</a>)
+that were not resolved despite it&rsquo;s post <code>1.0.0</code> GA hint that library is not
+yet intended for internet facing services - use case we are interested in here).</p>
+<h3 id="goals">Goals</h3>
+<ul>
+<li>Multiple transports: tcp, websocket, http2, websocket-over-http2.</li>
+<li>Runs both locally and in data center (aws), ops/automation friendly.</li>
+<li>Distributed load clients.</li>
+<li>Keep-It-simple with test configuration options for load clients:
+number of connections per instance, number of streams per connection, ramp up interval.</li>
+<li>Test only long-running <code>request-stream</code> interactions - dominating model for clients
+connecting over the internet - browsers &amp; mobile applications.</li>
+</ul>
+<h3 id="software">Software</h3>
+<p>Software stack is comprised of stable &amp; widely adopted components:</p>
+<p><a href="https://docs.docker.com/get-docker/">Docker</a> for building client/server images &amp; running containers.
+Test application images are created &amp; saved to configured docker registry as part of project build process.<br>
+<a href="https://www.nomadproject.io/">Nomad</a> for containers scheduling with built-in docker driver.<br>
+<a href="https://www.consul.io/">Consul</a> for service discovery. We register 2 services for load server instance</p>
+<ul>
+<li><code>rsocket-stress-test-server</code> for RSocket load itself.</li>
+<li><code>rsocket-stress-test-server-metrics</code> for http server exposing <code>/metrics</code> endpoint scraped by Prometheus.</li>
+</ul>
+<p><a href="https://prometheus.io/">Prometheus</a> stores host, JVM &amp; server metrics scraped from <code>rsocket-stress-test-server-metrics</code> endpoint.   <br>
+<a href="https://grafana.com/">Grafana</a> does metrics visualizations used to evaluate performance.</p>
+<p><code>Load server</code> contains RSocket server parameterized with network/IO transports and security configurations.
+Responder <code>request-stream</code> echoes back batches of original message at given intervals (effectively 1 message per second).</p>
+<p><code>Load clients</code> are configured with number of connections/streams, ramp up interval. They start new
+streams monotonically until target count is reached. Request message contains random bytes, and is 1KB in size.</p>
+<p>Both clients and servers use G1GC with default settings.</p>
+<p>The application can be deployed locally, running load test with local infrastructure
+is a matter of changing few urls:</p>
+<pre><code class="language-properties" data-lang="properties">export DOCKER_REPOSITORY_ADDRESS=localhost:5000
+export CONSUL_ADDRESS=localhost:8500
+export NOMAD_ADDR=http://localhost:4646
+</code></pre><h3 id="hardware">Hardware</h3>
+<p>Server is equivalent of AWS <code>c4.2xlarge</code> - mainstream VM with 8 vCPU / 16Gb RAM / 1000MBit network.</p>
+<p>Clients are <code>c4.xlarge</code> having 4 vCPU / 8Gb RAM / 1000MBit network each.</p>
+<p>Comparable resources may be allocated on common developer&rsquo;s box that helps with local experiments.</p>
+<h3 id="test-cases">Test cases</h3>
+<p>Test application consists of 2 load clients connecting single load server instance.</p>
+<p>Each load client is configured with env variables:</p>
+<pre><code class="language-properties" data-lang="properties">export CONNECTIONS=5000
+export STREAMS=25
+export RAMP_UP_PERIOD=250 #seconds 
+</code></pre><p>This results in 125k simultaneous streams per client, 250k streams per server over 10k connections.</p>
+<p>Startup script generates Nomad&rsquo;s job specification files from templates by substituting<br>
+configuration env variables, then asks Nomad to schedule test application.</p>
+<p>First test is for TCP transport, configured for 250k, 500k, 750k and 1000k streams respectively.</p>
+<p>We deliberately omit latency measurements until Part 2 - the goal is to determine maximum load before server starts to tip over.</p>
+<h3 id="tcp-250k-simultaneous-streams">Tcp, 250K simultaneous streams</h3>
+<p>250k streams over 10k connections, 125 seconds ramp up.</p>
+<pre><code class="language-properties" data-lang="properties">==&gt; Client # of connections: 5000
+==&gt; Client # of streams: 25
+==&gt; Client ramp up period, seconds: 125
+
+==&gt; Starting server using scripts/server.nomad...
+
+==&gt; Monitoring evaluation &quot;3b158360&quot;
+    Evaluation triggered by job &quot;rsocket-stress-test-server&quot;
+    Allocation &quot;2eae67ce&quot; created: node &quot;b4fd7677&quot;, group &quot;servers&quot;
+    Evaluation within deployment: &quot;69514dd5&quot;
+    Allocation &quot;2eae67ce&quot; status changed: &quot;pending&quot; -&gt; &quot;running&quot; (Tasks are running)
+    Evaluation status changed: &quot;pending&quot; -&gt; &quot;complete&quot;
+==&gt; Evaluation &quot;3b158360&quot; finished with status &quot;complete&quot;
+
+==&gt; Waiting 15s until server is started...
+
+==&gt; Starting clients using scripts/client.nomad...
+
+==&gt; Monitoring evaluation &quot;00b0c5e7&quot;
+    Evaluation triggered by job &quot;rsocket-stress-test-client&quot;
+    Allocation &quot;38387f71&quot; created: node &quot;b4fd7677&quot;, group &quot;clients&quot;
+    Allocation &quot;453a9469&quot; created: node &quot;b4fd7677&quot;, group &quot;clients&quot;
+    Evaluation within deployment: &quot;4e7c3c74&quot;
+    Allocation &quot;38387f71&quot; status changed: &quot;pending&quot; -&gt; &quot;running&quot; (Tasks are running)
+    Allocation &quot;453a9469&quot; status changed: &quot;pending&quot; -&gt; &quot;running&quot; (Tasks are running)
+    Evaluation status changed: &quot;pending&quot; -&gt; &quot;complete&quot;
+==&gt; Evaluation &quot;00b0c5e7&quot; finished with status &quot;complete&quot;
+
+==&gt; Stress test started
+==&gt; It will be stopped automatically after 1h
+==&gt; Can be stopped manually with ./test_stop.sh
+</code></pre><p>The base case has passed with moderate cpu usage: ~ 25%, total memory used peak (heap + non-heap) around 6GB.<br>
+<figure>
+    <img src="/img/250k-streams.png"/> 
+</figure>
+<br>
+<figure>
+    <img src="/img/250k-cpu.png"/> 
+</figure>
+   <br>
+<figure>
+    <img src="/img/250k-memory.png"/> 
+</figure>
+</p>
+<h3 id="tcp-500k-simultaneous-streams">Tcp, 500K simultaneous streams</h3>
+<p>500k streams over 10k connections, 250 seconds ramp up.</p>
+<p>Cpu usage grows linearly with streams count: peaked at 50% for cpu, and same level of total memory peak: 6GB.</p>
+<p><figure>
+    <img src="/img/500k-streams.png"/> 
+</figure>
+<br>
+<figure>
+    <img src="/img/500k-cpu.png"/> 
+</figure>
+<br>
+<figure>
+    <img src="/img/500k-memory.png"/> 
+</figure>
+</p>
+<h3 id="tcp-750k-simultaneous-streams">Tcp, 750K simultaneous streams</h3>
+<p>750k streams over 10k connections, 375 seconds ramp up.</p>
+<p>Test demonstrates the server starts to tip over around 600k streams, 7 GB memory, 60% process cpu - but this time at 100% host cpu usage.
+The result is an artifact of scheduling both server and clients on same host, and actual streams peak is higher -
+around 700-750k will consume 70-75% cpu - practical limit for stable service operation.</p>
+<p>The number is promising as there are few opportunities for optimizations - as will be shown in part 2 of the post.</p>
+<p><figure>
+    <img src="/img/750k-streams.png"/> 
+</figure>
+<br>
+<figure>
+    <img src="/img/750k-cpu.png"/> 
+</figure>
+<br>
+<figure>
+    <img src="/img/750k-memory.png"/> 
+</figure>
+</p>
+<p>Interesting observation - allocation rate peaks at 800MB/s even though load server application code does not allocate
+directly. Handful of objects instantiated by library per message are significant contribution to total GC pressure once
+number of messages becomes millions.<br>
+<figure>
+    <img src="/img/750k-alloc.png"/> 
+</figure>
+</p>
+<p>GC pauses of this run, for reference
+<figure>
+    <img src="/img/750k-gc.png"/> 
+</figure>
+</p>
+<h3 id="part-2">Part 2</h3>
+<p>In second part we will continue with design decisions review
+of the original library, their impact on performance and how It can be improved.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+
