@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Alternative WebSockets for netty/java: doubling throughput of small messages</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 380px)" href="/css/handheld-v-narrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  3px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+            <script async src="https://www.googletagmanager.com/gtag/js?id=UA-159301973-1"></script>
+            <script>
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments)};
+              gtag('js', new Date());
+              gtag('config', 'UA-159301973-1');
+            </script>
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">Alternative WebSockets for netty/java: doubling throughput of small messages</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">Home</a></li>
+                            
+                                <li><a href="/mstreams/">Mstreams</a></li>
+                            
+                                <li><a href="/post/">Blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>Alternative WebSockets for netty/java: doubling throughput of small messages</h2>
+        <h5>January 9, 2023</h5>
+        
+<a href="tags/netty"><kbd class="item-tag">netty</kbd></a>
+
+<a href="tags/websocket"><kbd class="item-tag">websocket</kbd></a>
+
+<a href="tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><h3 id="tldr">TL;DR</h3>
+<p>This post is brief presentation of <a href="https://github.com/jauntsdn/netty-websocket-http1">netty-websocket-http1</a>:
+alternative netty/java implementation of RFC6455 - the WebSocket protocol.</p>
+<p>Its advantage is significant per-core throughput improvement (1.8–2x) for small frames in comparison to netty’s
+out-of-the-box websocket codecs, and minimal heap allocations on frame path. Library may also be combined with
+<a href="https://github.com/jauntsdn/netty-websocket-http2">netty-websocket-http2</a>.</p>
+<p>Its purpose is to be the basis for high-performance RPC transport of small binary messages (protocol buffers),
+mainly cross-datacenter communications over internet — both http1 and http2.</p>
+<p>Preliminary performance evaluation with netty’s out-of-the-box codec showed only ~1M 120 byte messages per core
+over non-TLS connection — very modest for this simple wire format, concluding from experience with other
+<a href="post/rsocket-summary/">protocols</a>.</p>
+<p>Additionally there are unnecessary per-frame allocations as netty’s codec expects binary payloads wrapped as
+WebSocketFrame messages (which are likely not useful for users application purposes), plus allocates array per-frame
+for payload masking (latter was recently <a href="https://github.com/netty/netty/pull/12969">improved</a>).</p>
+<h3 id="use-case--scope">use case &amp; scope</h3>
+<ul>
+<li>
+<p>Intended for efficiently encoded, dense binary data: no extensions (compression) support / outbound text frames /
+inbound UTF8 validation.</p>
+</li>
+<li>
+<p>Library assumes small frames — many have payload &lt;= 125 bytes, most are &lt; 1500, maximum supported is 65k (65535 bytes).</p>
+</li>
+<li>
+<p>Just codec — fragments, pings, close frames are decoded &amp; validated only. It is responsibility of user code to
+handle frames according to protocol (reassemble frame fragments, perform graceful close, respond to pings).</p>
+</li>
+<li>
+<p>Dedicated decoder for case of exchanging tiny messages over TLS connection: only non-masked frames with &lt;= 125 bytes
+of payload for minimal per-WebSocket state (memory) overhead.</p>
+</li>
+<li>
+<p>No per-frame heap allocations in WebSocket FrameFactory / decoder.</p>
+</li>
+<li>
+<p>Single-threaded (transport IO event-loop) callbacks / frame factory API: in practice user code has its own message
+types to carry data, external means (e.g. mpsc / spsc queues) may be used to properly publish messages on event-loop thread.</p>
+</li>
+</ul>
+<h3 id="framefactory--callbacks-api">FrameFactory / Callbacks API</h3>
+<p>1.<code>WebSocketFrameFactory</code> to create outbound frames as plain byte buffers, which helps to reduce pressure on memory
+allocator, and avoid either two tiny buffers (“header” plus payload) or redundant memory copies for each frame.</p>
+<p>It is library user responsibility to mask outbound frame once payload is written: <code>ByteBuf WebSocketFrameFactory.mask(ByteBuf)</code></p>
+<pre><code class="language-properties" data-lang="properties">public interface WebSocketFrameFactory {
+
+  ByteBuf createBinaryFrame(ByteBufAllocator allocator, int binaryDataSize);
+  
+  // create*Frame are omitted for control frames, created in similar fashion
+
+  ByteBuf mask(ByteBuf frame);
+}
+</code></pre><p>2.<code>WebSocketFrameListener</code> to receive inbound frames</p>
+<pre><code class="language-properties" data-lang="properties">public interface WebSocketFrameListener {
+
+  void onChannelRead(ChannelHandlerContext ctx, boolean finalFragment,
+                     int rsv, int opcode, ByteBuf payload);
+   
+  // netty handler callbacks are omitted for brevity
+
+  // lifecycle
+  default void onOpen(ChannelHandlerContext ctx) {}
+
+  default void onClose(ChannelHandlerContext ctx) {}
+</code></pre><p>3.<code>WebSocketCallbacksHandler</code> to exchange <code>WebSocketFrameListener</code> for <code>WebSocketFrameFactory</code> on successful
+WebSocket handshake</p>
+<pre><code class="language-properties" data-lang="properties">public interface WebSocketCallbacksHandler {
+
+  WebSocketFrameListener exchange(
+      ChannelHandlerContext ctx, WebSocketFrameFactory webSocketFrameFactory);
+}
+</code></pre><p>4.Similar to Netty, this library has <code>WebSocketClientProtocolHandler</code> &amp; <code>WebSocketServerProtocolHandler</code> for end users.</p>
+<p>These handlers are responsible for whole WebSocket http handshake process — up until <code>WebSocketCallbacksHandler</code>
+exchange on successful handshake completion.</p>
+<p>It is common for <code>WebSocketCallbacksHandler</code> to also implement <code>WebSocketFrameListener</code>, so users have</p>
+<pre><code class="language-properties" data-lang="properties">class FrameHandler implements WebSocketCallbacksHandler, 
+                              WebSocketFrameListener {
+
+  WebSocketFrameFactory webSocketFrameFactory;
+
+  WebSocketFrameListener exchange(
+        ChannelHandlerContext ctx, 
+        WebSocketFrameFactory webSocketFrameFactory) {
+    this.webSocketFrameFactory = webSocketFrameFactory;
+  }
+
+  void onChannelRead(ChannelHandlerContext ctx, 
+      boolean finalFragment, int rsv, int opcode, ByteBuf payload) {
+    // read inbound frames, write outbound frames /w webSocketFrameFactory
+  }
+}
+</code></pre><p>Performance test module serves as good API showcase for both <a href="https://github.com/jauntsdn/netty-websocket-http1/blob/develop/netty-websocket-http1-perftest/src/main/java/com/jauntsdn/netty/handler/codec/http/websocketx/perftest/client/Main.java">client</a>
+and <a href="https://github.com/jauntsdn/netty-websocket-http1/blob/develop/netty-websocket-http1-perftest/src/main/java/com/jauntsdn/netty/handler/codec/http/websocketx/perftest/server/Main.java">server</a>.</p>
+<h3 id="performance">performance</h3>
+<p>Below is <a href="https://github.com/jauntsdn/netty-websocket-http1/tree/develop/netty-websocket-http1-perftest">per-core throughput</a>
+comparison with netty’s out-of-the-box WebSocket handlers: non-masked frames with 8, 64, 125, 1000 bytes of randomized
+payload over encrypted/non-encrypted connection.</p>
+<ul>
+<li>non-encrypted</li>
+</ul>
+<figure>
+    <img src="/img/non-encrypted.webp"/> 
+</figure>
+
+<ul>
+<li>encrypted</li>
+</ul>
+<figure>
+    <img src="/img/encrypted.webp"/> 
+</figure>
+
+<h3 id="websocket-over-http2">websocket-over-http2</h3>
+<p>One drawback of websocket-over-http2 support with OOTB netty codecs is that It is much slower than either
+http2 or WebSocket alone (2 protocols to decode from byte stream).</p>
+<p>This library helps to ease the problem as It may be combined with <a href="https://github.com/jauntsdn/netty-websocket-http2">jauntsdn/websocket-http2</a>
+using <a href="https://github.com/jauntsdn/netty-websocket-http2/tree/develop/netty-websocket-http2-callbacks-codec">http1 codec</a>
+API for comparable benefit. With 8, 125, 1000 bytes of randomized payload frames over encrypted connection results are as follows:</p>
+<figure>
+    <img src="/img/encrypted-ws-http2.webp"/> 
+</figure>
+
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

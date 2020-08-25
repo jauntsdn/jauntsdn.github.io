@@ -1,0 +1,27 @@
+.intro > h1 {
+    color: #212121;
+    font-size: 56px;
+    margin-bottom: 0px;
+}
+
+.intro > h2 {
+    color: #757575;
+    font-size: 15px;
+}
+
+div.intro h1 + h2 {
+    margin-top: 0px;
+}
+
+.mstreams {
+    width: 510px;
+    transform: translateY(5vh);
+}
+
+.mstreams-capt {
+    font-size: 18px;
+}
+
+.mstreams-desc {
+   font-size: 16px;
+}
