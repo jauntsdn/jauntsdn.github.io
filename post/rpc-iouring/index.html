@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>IO_URING for Netty based RPC: quick analysis</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 700px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 300px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 300px)" href="/css/handheld-v-narrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.com/img/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  3px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.com/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"> 
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/java.min.js"></script>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/scala.min.js"></script>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/kotlin.min.js"></script>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/go.min.js"></script>
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+            <script async src="https://www.googletagmanager.com/gtag/js?id=UA-159301973-1"></script>
+            <script>
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments)};
+              gtag('js', new Date());
+              gtag('config', 'UA-159301973-1');
+            </script>
+        
+
+        
+            <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">IO_URING for Netty based RPC: quick analysis</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">Home</a></li>
+                            
+                                <li><a href="/post/">Blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="/index.xml"><i class="fa fa-rss"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/jauntsdn/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>IO_URING for Netty based RPC: quick analysis</h2>
+        <h5>March 2, 2019</h5>
+        
+<a href="https://jauntsdn.com/tags/io_uring"><kbd class="item-tag">io_uring</kbd></a>
+
+<a href="https://jauntsdn.com/tags/netty"><kbd class="item-tag">netty</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><p>Netty IO_URING based transport was recently <a href="https://netty.io/news/2020/11/16/io_uring-0-0-1-Final.html">released</a>
+as <code>incubator</code> project. Several sources have reported substantial performance gains with It, including
+Netty team TCP echo test results that demonstrated 2x better throughput compared to EPOLL.</p>
+<p>The goal of this post is CPU and memory performance evaluation of IO_URING in RPC library implemented with Netty
+on top of TCP, and comparison against EPOLL IO.</p>
+<p>It focuses on two use cases:</p>
+<ul>
+<li>
+<p>backend service: few dozens of connections, each serving ~1000 concurrent streams of few dozens messages each</p>
+</li>
+<li>
+<p>frontend service: thousands of connections, each serving dozens of long-running streams, streams are periodical message
+batches</p>
+</li>
+</ul>
+<h3 id="io_uring">IO_URING</h3>
+<p><a href="https://kernel.dk/io_uring.pdf">IO_URING</a> is newest API for doing async I/O on Linux.</p>
+<p>IO_URING has 2 ringbuffer backed queues shared between kernel and application process: one for submission of
+syscalls that will be eventually executed by kernel, one for completion events.</p>
+<p><code>io_uring_enter</code> syscall is used to notify kernel about pending entries on submission queue.</p>
+<p>IO_URING may reduce user-kernel space switch overhead, proportional to number of entries on submission queue
+per <code>io_uring_enter</code>.</p>
+<h3 id="netty-io_uring-based-io">Netty: IO_URING based IO</h3>
+<p>Netty creates one IO_URING instance per event loop, its submission queue can have 4096 (allowed maximum) entries by default.</p>
+<p>Transport relies on normal syscalls - <code>pollin</code>, <code>pollout</code> for network buffers readability/writability notifications,
+followed by <code>read</code> and <code>writev</code> for reads/writes. Syscalls are scheduled as entries on submission queue, and results are consumed on
+completion queue.</p>
+<p>Transport maintains 1 outstanding <code>read</code> &amp; <code>writev</code> submission per channel; channel writability state and available outbound
+buffer capacity are updated asynchronously relative to <code>Channel.flush()</code> - only after corresponding <code>writev</code> result is received
+on completion queue.</p>
+<p>For this reason there may be only 1 outstanding <code>flush()</code> per <code>Channel</code> - consequent flushes are ignored until next write result.</p>
+<h3 id="comparison-with-epoll">Comparison with EPOLL</h3>
+<p>EPOLL is purely IO notification mechanism - Netty sets It in edge-triggered mode so clients are aware when inbound/outbound
+buffers become readable/writeable for set of socket descriptors.</p>
+<p>Contrary to IO_URING, <code>Channel.flush()</code> does synchronous <code>writev</code> syscall -
+channel writability and available outbound buffer capacity are also updated synchronously.</p>
+<h3 id="setup">Setup</h3>
+<p>Test setup is 1 client and 1 server sharing single host - commodity box having 12 vCPU/32GB/1GBit ethernet.</p>
+<p>RPC library is part of not yet publicly available project <code>com.jauntsdn.rsocket</code>.</p>
+<p>Kernel version: 5.10.1<br>
+Java version: 1.8.0_282 OpenJDK 64-Bit Server VM<br>
+Netty version: 4.1.59.Final<br>
+Transport IO_URING version: 0.0.4.Final</p>
+<h3 id="backend-service-streams-throughput">Backend service: streams throughput</h3>
+<p>1K of concurrent finite streams per connection, 32 messages per stream, message size is 128 bytes, 30 seconds ramp up.</p>
+<p>Connection count varies in range 16-64.</p>
+<pre><code class="language-properties" data-lang="properties">Connection    IO transport         Host CPU usage,
+count                              Server/Client
+
+16            EPOLL                0.05 / 0.05
+              IO_URING             0.05 / 0.06
+
+32            EPOLL                0.10 / 0.13
+              IO_URING             0.11 / 0.16
+
+48            EPOLL                0.15 / 0.24
+              IO_URING             0.16 / 0.26
+
+64            EPOLL                0.20 / 0.37
+              IO_URING             0.22 / 0.38
+</code></pre><h3 id="frontend-service-periodic-message-batches">Frontend service: periodic message batches</h3>
+<p>Infinite stream of message batches: 20K connections, 30 streams per connection, 10 messages every 10 seconds,
+100 seconds ramp up.</p>
+<p>Message size varies in range 128 - 512 bytes.</p>
+<pre><code class="language-properties" data-lang="properties">Message       IO transport      Host CPU usage,
+size, bytes                     Server/Client
+
+128           EPOLL             0.09 / 0.22
+              IO_URING          0.10 / 0.22
+
+256           EPOLL             0.09 / 0.23
+              IO_URING          0.11 / 0.23
+
+512           EPOLL             0.09 / 0.23
+              IO_URING          0.11 / 0.24
+</code></pre><p>Numbers follow <code>backend service</code> use case: slight IO_URING disadvantage for both reads and writes.</p>
+<p>For both cases flame graphs showed there is no interesting discrepancies between EPOLL / IO_URING on client and server,
+other than 7% of total CPU time spent in native code of IO_URING (I omit graphs for brevity as they are not very readable
+in context of a blog).</p>
+<p>This correlates with observed measurements. It seems the number of IO syscalls scheduled per <code>io_uring_enter</code>
+is so small the cost of <code>io_uring_enter</code> itself overweights context switch and JNI overhead of individual reads/writes.</p>
+<p>Next step would be measuring number of entries per submit &amp; <code>writev</code> iovec size, but transport does not offer any metrics,
+and I don&rsquo;t have cycles to implement them atm.</p>
+<h3 id="frontend-service-periodic-messages">Frontend service: periodic messages</h3>
+<p>Infinite stream of messages: 1 message every 1 second, 100 streams per connection, 8K connections,
+200 seconds ramp up.</p>
+<p>Message size varies in range 128 - 512 bytes.</p>
+<pre><code class="language-properties" data-lang="properties">Message       IO transport      Host CPU usage,
+size, bytes                     Server/Client
+
+128           EPOLL             0.24 / 0.24
+              IO_URING          0.18 / 0.12
+
+256           EPOLL             0.26 / 0.24
+              IO_URING          0.18 / 0.13
+
+512           EPOLL             0.29 / 0.25
+              IO_URING          0.20 / 0.16
+</code></pre><p>Now IO_URING demonstrates better CPU performance for both reads and writes.</p>
+<p>Client flamegraphs for <code>periodic</code> have one peculiarity in native callstack:</p>
+<pre><code class="language-properties" data-lang="properties">io_queue_async_work
+-------------
+io_queue_sqe
+</code></pre><p>while for <code>batch</code> use case there is</p>
+<pre><code class="language-properties" data-lang="properties">io_read | io_write
+-------------
+io_issue_sqe
+-------------
+io_queue_sqe
+</code></pre><p>Difference is caused by <a href="https://www.mankier.com/2/io_uring_enter#Description-IOSQE_ASYNC">IOSQE_ASYNC</a> flag.
+It is set in transport if submission queue size exceeds given value on <code>io_uring_enter</code>, and is 25
+<a href="https://github.com/netty/netty-incubator-transport-io_uring/blob/104142635c0bdc6539385ece0276dd85c2ce3e28/src/main/java/io/netty/incubator/channel/uring/Native.java#L35">by default</a></p>
+<p>Forcing IOSQE_ASYNC flag off did not have observable negative impact on CPU performance, but gave valuable hint -
+<code>periodic</code> case performs better mainly due to more entries enqueued per submit compared to <code>batch</code> case.</p>
+<p>To summarize, IO_URING transport gains vary on use case, may perform worse than EPOLL - profile your application to make informed choice.</p>
+<h3 id="single-stream-throughput">Single stream throughput</h3>
+<p>Single continuous infinite stream over single connection, 1K message size, window size is 700K messages.</p>
+<p>Window size is intentionally set to extreme value to highlight IO_URING transport specifics.</p>
+<p>This case is not realistic and intended to demonstrate async nature of flushes with <code>IO_URING</code>.</p>
+<h3 id="epoll">EPOLL</h3>
+<p>Throughput, messages per second</p>
+<pre><code class="language-properties" data-lang="properties">11:08:31.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2994233
+11:08:32.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 3008608
+11:08:33.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 3006733
+11:08:34.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 3003608
+11:08:35.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2902706
+11:08:36.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 3002358
+11:08:37.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2986733
+11:08:38.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2974233
+11:08:39.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 3002983
+11:08:40.656 netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2998608
+</code></pre><h3 id="io_uring-1">IO_URING</h3>
+<p>Throughput, messages per second</p>
+<pre><code class="language-properties" data-lang="properties">11:36:30.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1462272
+11:36:31.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 871424
+11:36:32.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 777216
+11:36:33.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2249728
+11:36:34.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1446912
+11:36:35.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1747968
+11:36:36.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1555456
+11:36:37.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1555456
+11:36:38.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1555456
+11:36:39.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1556478
+11:36:40.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2057216
+11:36:41.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1763328
+11:36:42.598 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 1173504
+</code></pre><p>Single stream throughput test is not in favor of IO_URING transport: 0.8 - 2.3 million messages per second versus 3 million with EPOLL.</p>
+<p>To explain instability let&rsquo;s look into allocations &amp; GC.</p>
+<h3 id="garbage-production">Garbage production</h3>
+<h3 id="epoll-1">EPOLL</h3>
+<p>Server GC over 1 minute with EPOLL<br>
+<code>GC time: 1 collections, 8.468 ms Last Cause: G1 Evacuation Pause</code></p>
+<p>Server peak heap memory usage is around 35 MBytes.</p>
+<p>Small allocation rates are expected given that library under test creates nonexistent amount of per message garbage,
+and request bytebuffer is reused for response stream.</p>
+<p>And small heap size is consequence of sync flushes under EPOLL IO - there is limited number of inflight <code>ByteBufs</code>
+and backed native memory so they are pooled efficiently.</p>
+<h3 id="io_uring-2">IO_URING</h3>
+<p>Server GC over 1 minute with IO_URING<br>
+<code>GC time: 67 collections, 24.933 s Last Cause: G1 Evacuation Pause</code></p>
+<p>Server peak heap memory usage is 3.7 GBytes</p>
+<p>Here are top allocations</p>
+<pre><code class="language-properties" data-lang="properties">  bytes       percent  samples  top
+  ----------  -------  -------  ---
+  6177757184   64.87%     5898  io.netty.channel.ChannelOutboundBuffer$Entry
+  2543085568   26.70%     2432  io.netty.util.Recycler$DefaultHandle
+   793051136    8.33%      761  io.netty.buffer.PooledUnsafeDirectByteBuf
+     6279168    0.07%        6  io.netty.buffer.PoolSubpage
+     3141632    0.03%        3  io.netty.channel.unix.IovArray
+</code></pre><p>Lot of <code>ChannelOutboundBuffer</code> entries for native buffers that await scheduling on submission queue is consequence
+of async flushing with IO_URING.</p>
+<p>Switching to more realistic 70K messages window still demonstrates IO_URING transport tendency for
+elevated memory usage and GC, with lower throughput limit:</p>
+<pre><code class="language-properties" data-lang="properties">13:01:16.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2021374
+13:01:17.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2206720
+13:01:18.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2254848
+13:01:19.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2333696
+13:01:20.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2410496
+13:01:21.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2227200
+13:01:22.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2284544
+13:01:23.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2331648
+13:01:24.665 netty-io-transport-io_uring-1-1 com.jauntsdn.rsocket.test.client.Main client received messages: 2255872
+</code></pre><p><code>GC time: 35 collections, 2.196 s Last Cause: G1 Evacuation Pause</code></p>
+<p>Peak heap usage is 850 MBytes - order of magnitude more than EPOLL.</p>
+<p>Single stream throughput is 2.2 - 2.4 million messages per second, versus 3 million with EPOLL. While such workload rarely
+appears in practice, numbers are indicator of per message round trip overhead that manifests itself on production workloads,
+but in smaller extent.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/netty-websocket-http2/">WebSockets over http/2: implementing RFC8441 with Netty</a></h4>
+    <h5>July 30, 2020</h5>
+    
+<a href="https://jauntsdn.com/tags/netty"><kbd class="item-tag">netty</kbd></a>
+
+<a href="https://jauntsdn.com/tags/websocket"><kbd class="item-tag">websocket</kbd></a>
+
+<a href="https://jauntsdn.com/tags/http2"><kbd class="item-tag">http2</kbd></a>
+
+<a href="https://jauntsdn.com/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

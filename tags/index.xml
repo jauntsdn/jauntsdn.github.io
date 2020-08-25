@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on JAUNT.SDN</title>
+    <link>https://jauntsdn.com/tags/</link>
+    <description>Recent content in Tags on JAUNT.SDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 06 Jul 2021 10:18:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://jauntsdn.com/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>java</title>
+      <link>https://jauntsdn.com/tags/java/</link>
+      <pubDate>Tue, 06 Jul 2021 10:18:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/java/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>RSocket</title>
+      <link>https://jauntsdn.com/tags/rsocket/</link>
+      <pubDate>Tue, 06 Jul 2021 10:18:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/rsocket/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>grpc</title>
+      <link>https://jauntsdn.com/tags/grpc/</link>
+      <pubDate>Thu, 20 May 2021 08:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/grpc/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>helidon</title>
+      <link>https://jauntsdn.com/tags/helidon/</link>
+      <pubDate>Thu, 22 Apr 2021 08:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/helidon/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>http2</title>
+      <link>https://jauntsdn.com/tags/http2/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/http2/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>netty</title>
+      <link>https://jauntsdn.com/tags/netty/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/netty/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>websocket</title>
+      <link>https://jauntsdn.com/tags/websocket/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/websocket/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>load-balancer</title>
+      <link>https://jauntsdn.com/tags/load-balancer/</link>
+      <pubDate>Thu, 09 Apr 2020 17:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/load-balancer/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>io_uring</title>
+      <link>https://jauntsdn.com/tags/io_uring/</link>
+      <pubDate>Sat, 02 Mar 2019 08:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.com/tags/io_uring/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

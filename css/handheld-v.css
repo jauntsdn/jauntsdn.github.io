@@ -1,0 +1,28 @@
+/* Homepage */
+
+.intro {
+    transform: translateY(9vh);
+}
+
+.intro > h1 {
+    color: #212121;
+    font-size: 7vh;
+}
+
+.intro > h2 {
+    color: #757575;
+    font-size: 1em;
+}
+
+div.intro h1 + h2 {
+    margin-top: 10px;
+}
+
+div#logo {
+            width: 144px;
+            height: 38px;
+            transform: translateY(-9vh);
+            margin: 0 auto;
+            background: url(../img/jaunt_icon_mobile.png)
+}
+

@@ -1,0 +1,21 @@
+div#logo {
+            width: 264px;
+            height: 70px;
+            transform: translateY(-9vh);
+            margin: 0 auto;
+            background: url(../img/jaunt_icon.png)
+}
+
+.intro {
+    transform: translateY(22vh);
+}
+
+.intro > h1 {
+    color: #212121;
+    font-size: 10vh;
+}
+
+.intro > h2 {
+    color: #757575;
+    font-size: 1.6em;
+}
