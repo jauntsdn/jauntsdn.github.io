@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on JAUNTSDN</title>
+    <link>https://jauntsdn.github.io/tags/</link>
+    <description>Recent content in Tags on JAUNTSDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 01 Feb 2023 10:18:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://jauntsdn.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>java</title>
+      <link>https://jauntsdn.github.io/tags/java/</link>
+      <pubDate>Wed, 01 Feb 2023 10:18:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/java/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Mstreams</title>
+      <link>https://jauntsdn.github.io/tags/mstreams/</link>
+      <pubDate>Wed, 01 Feb 2023 10:18:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/mstreams/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>RSocket</title>
+      <link>https://jauntsdn.github.io/tags/rsocket/</link>
+      <pubDate>Wed, 01 Feb 2023 10:18:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/rsocket/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>grpc</title>
+      <link>https://jauntsdn.github.io/tags/grpc/</link>
+      <pubDate>Thu, 20 May 2021 08:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/grpc/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>http2</title>
+      <link>https://jauntsdn.github.io/tags/http2/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/http2/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>netty</title>
+      <link>https://jauntsdn.github.io/tags/netty/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/netty/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>websocket</title>
+      <link>https://jauntsdn.github.io/tags/websocket/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/websocket/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>load-balancer</title>
+      <link>https://jauntsdn.github.io/tags/load-balancer/</link>
+      <pubDate>Thu, 09 Apr 2020 17:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/tags/load-balancer/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

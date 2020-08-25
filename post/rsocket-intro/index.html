@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>RSocket: short introduction</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">RSocket: short introduction</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>RSocket: short introduction</h2>
+        <h5>March 17, 2020</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><p>Description from official RSocket-java repository</p>
+<pre><code class="language-properties" data-lang="properties">RSocket is a binary protocol for use on byte stream transports...
+It enables the following symmetric interaction models via async message passing over a single connection..
+</code></pre><p>leaves bits of mystery unless reader is interested enough to skim over lengthy FAQ and motivations documents.
+This post is one page size summary of distinctive RSocket features that make It a good companion for Http2/GRPC.</p>
+<h3 id="low-latency">Low latency</h3>
+<p>RSocket provides means for maintaining low latency under high throughput by limiting incoming and outgoing message queue
+size on both sides of connection:</p>
+<ul>
+<li>
+<p>Stream level flow control with <a href="https://github.com/reactive-streams/reactive-streams-jvm">Reactive Streams</a>.
+It guarantees that for single request, peer publisher will send no more messages than demanded with RequestN frame.</p>
+</li>
+<li>
+<p>Connection level with requests <a href="https://rsocket.io/docs/Protocol.html#flow-control-lease">Leasing</a>.
+It limits the number of concurrent streams on Responder with expiring allowed requests grant.</p>
+</li>
+</ul>
+<p>Often disconnects are inherent for mobile clients. Latency adds up on each hop between content producer and consumer
+due to cascade of service reconnects. This is addressed by automatic session <a href="https://rsocket.io/docs/Protocol.html#resuming-operation">Resumption</a> enabled on edge servers and clients.</p>
+<p>Both are transparent for application layer: because part of the protocol, services implemented on top
+of RSocket are not concerned about existence of the above.</p>
+<h3 id="any-transport">Any transport</h3>
+<p>RSocket is session layer protocol, transport is anything able to reliably send bytes in order:
+from websockets to tcp to unix sockets.</p>
+<h3 id="compatible-with-http2">Compatible with http2</h3>
+<p>RSocket streams are similar and naturally map to http2 streams. RSockets on top of such
+transport can be routed by web gateways/proxies/loadbalancers.</p>
+<h3 id="both-typed-and-raw-byte-messages">Both typed and raw byte messages</h3>
+<p>RSocket-RPC is efficient Protocol Buffers / code generation based RPC system similar to GRPC.
+It is intended for application services while proxies use byte stream RSockets directly for lower overhead.</p>
+<h3 id="fits-existing-ecosystem">Fits existing ecosystem</h3>
+<p>RSocket streams are semantically equivalent to core types of Reactive Streams compliant projects -
+on JVM these are <code>projectreactor</code>, <code>rxjava</code>, <code>akka-streams</code>. They simplify protocol implementation,
+and dependent applications benefit from available libraries and familiar programming model.</p>
+<h3 id="afterword">Afterword</h3>
+<p>RSocket is well balanced capabilities-wise. It has pragmatic scope: efficiently transfer byte streams across networks and processes,
+delivered with small set of orthogonal features (reactive streams, request leasing, resumption).
+It is easy to comprehend and implement. Moving any feature out would make RSocket not suitable for problems It was intended for.
+Overloading specification with ad-hoc concepts - message layout, routing, tracing - puts It in odd middleground of lack of
+focus and questionable interop still without richness expected from application level protocol.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

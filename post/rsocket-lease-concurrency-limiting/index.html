@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Service concurrency limiting with RSocket request leases</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">Service concurrency limiting with RSocket request leases</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>Service concurrency limiting with RSocket request leases</h2>
+        <h5>April 9, 2020</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/load-balancer"><kbd class="item-tag">load-balancer</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><!-- raw HTML omitted -->
+<p>This is first post in advanced applications of RSocket series, and topic for today is less known yet essential
+protocol feature - requests leasing.</p>
+<p>We know that single RSocket stream is naturally bounded due to Reactive Streams semantics - there is no more
+in-flight messages than demanded with receiver Subscription.</p>
+<p>However limiting outstanding messages per request is not useful without limiting requests concurrency.</p>
+<p>For services, growing requests unbounded exhausts their backing resources and leads to latency surge.</p>
+<p>For proxies, messages queue up on sender and receiver side, network link hits capacity limit - both lead to
+gradual memory &amp; latency increase.</p>
+<p>Relying solely on latency aware load balancer on Requester side is not enough. Historical stats are
+not meaningful if service is about to be overwhelmed by requests spike and latencies grow exponentially.
+This event makes service unusable, all in-flight requests are affected and likely to timeout.</p>
+<p>Requester side load balancer needs to be paired with Responder side mechanism ensuring requests volume does
+not exceed capacity of the service and It can serve responses in a timely manner.</p>
+<p>RSocket provides this concurrency limiting mechanism with Requests Lease. It is based on simple idea<br>
+of expiring request permits sent periodically to its peer by Responder.</p>
+<h3 id="how-it-works">How It works</h3>
+<p>Lease rejection policy is implemented on Responder side only, requests over leased capacity are short-circuited
+before hitting request handler. Rejecting on requester side is not performed because Responder should be
+aware of actual requests volume.</p>
+<p>Requester RSocket does not expose leased requests directly, instead It provides availability as <code>remaining requests / leased requests</code>
+ratio. Expired lease has availability 0.0.</p>
+<p>Lease is primarily intended for server side use cases, notably for reverse proxies in front of services set.<br>
+In simplest case proxy selects service RSocket with highest availability for next request thus implements least-loaded
+balancing strategy, solely Responder side driven. It works well in homogeneous networks since services can reliably
+estimate own capacity for given target latency, and aggressively drop what is above.</p>
+<p>This contrasts with least-loaded LB applied alone on requester side, which would produce suboptimal results as It effectively treats
+service instances as having same capacity, even if backed by different hardware.</p>
+<p>Service Responder gathers stats to estimate allowed requests: number of received/completed requests,
+response errors and response latencies aggregated over logical service call name. For response streams latency is defined as
+interval between request is received and first signal of response is produced.</p>
+<p>Proxies may use round-trip time as latency estimate, It is provided by RSocket keep-alive frame which is able to carry data payload.
+RTT includes time spent on network and incoming / outgoing queues of both peers. Responder allowed requests should be decreased
+once RTT substantially exceeds expected latency value.</p>
+<p><em>(Bit of trivia) Official RSocket-java repo started treating keep-alive frames as
+prioritized, so RTT will only include time spent on network and not on RSocket queues. There under some unfortunate circumstances
+one could witness few milliseconds round trips but requests dropped by multiple second timeouts.</em></p>
+<h3 id="building-blocks">Building blocks</h3>
+<p>Request leasing is enabled on <code>RSocketFactory</code> for both server and client of <a href="https://github.com/jauntsdn/rsocket">jauntsdn/rsocket</a>.</p>
+<pre><code class="language-properties" data-lang="properties">RSocketFactory.lease(Lease.Configurer);
+
+interface Configurer {
+
+    Optional&lt;Lease.StatsRecorder&lt;?&gt;&gt; configure(Lease.Controller leaseController);
+  }
+</code></pre><p><code>Lease.Configurer</code> is a handle for 2 components:</p>
+<ul>
+<li><code>Lease.StatsRecorder</code> is for gathering requests statistics</li>
+<li><code>Lease.Controller</code> is for allowing requests leases sent to peer Requester, and used by Responder.</li>
+</ul>
+<pre><code class="language-properties" data-lang="properties">interface Controller {
+   
+    void allow(int timeToLiveMillis, int allowedRequests); 
+}
+</code></pre><p><code>StatsRecorder&lt;T&gt;</code> contains set of callbacks tied to lifecycle of request and response on Responder side. <code>&lt;T&gt;</code> parameter
+denotes logical name of the call, e.g. for RSocket-RPC this can be <code>String</code> of form <code>service/method</code>, and is provided in every callback.</p>
+<pre><code class="language-properties" data-lang="properties">interface StatsRecorder&lt;T&gt; {
+
+    T onRequestStarted(Interaction.Type requestType, ByteBuf metadata);
+
+    void onResponseStarted(
+            Interaction.Type requestType,
+            T request,
+            Interaction.StreamSignal firstSignal,
+            long latencyMicros);
+
+    void onResponseTerminated(
+            Interaction.Type requestType,
+            T request,
+            Interaction.StreamSignal lastSignal,
+            long responseDurationMicros);
+    
+    void onRtt(long rttMicros);
+   
+    void onOpen();
+    
+    void onClose(long graceTimeoutMillis);
+    
+    void onError(Interaction.Type requestType, Throwable err);
+  }
+</code></pre><ul>
+<li>
+<p><code>onRequestStarted</code> is called once Responder receives the request,
+returns logical name of the call based on request type and metadata.</p>
+</li>
+<li>
+<p><code>void onResponseStarted</code> is called
+once response first signal is received (either data or termination). <code>latencyMicros</code> is interval between start of the request
+and first signal of the response.</p>
+</li>
+<li>
+<p><code>void onResponseTerminated</code> is called once response is terminated.</p>
+</li>
+<li>
+<p><code>void onRtt</code> is called on round-trip time measured with keep-alive frame.</p>
+</li>
+</ul>
+<p><code>LeaseController</code> is handed to <code>StatsRecorder</code>, which uses stats
+to estimate allowed requests and expiration time. Produced leases are sent to peer requester, and utilized by
+Responder to implement lease policy - rejected requests are terminated with RSocket <code>REJECTED</code> error containing either
+<code>lease_expired</code> or <code>lease_exhausted</code> message.</p>
+<p>On requester RSocket allowed requests are expressed by <code>RSocket.availability()</code> as ratio between remaining and initially allowed
+requests. For example, if requester receives lease of 10 requests over 1000 millis, initial availability is 10/10 = 1.0.
+Once one request is sent, availability is 9/10 = 0.9. Expired lease has availability 0.0.</p>
+<h3 id="showcase">Showcase</h3>
+<p>Lets compose <a href="https://github.com/jauntsdn/rsocket-requests-lease">demo application</a> to evaluate feature in practice.</p>
+<p>It consists of three parts: set of servers hosting simple RSocket-RPC service, reverse proxy fronting servers and RSocket-RPC client.
+Leasing is enabled on servers and proxy, and disabled on client.</p>
+<p>Service is implemented as saturable one, with response times proportional to number of (concurrent) requests in given time window.
+It roughly models real-world service, either IO bound - backed by database, or CPU bound involving heavy computations.</p>
+<p>Response time delays are controlled with <code>CONCURRENCY_DELAY</code> property containing string of form <code>10 =&gt; 2; 50 =&gt; 5; 120 =&gt; 20; =&gt; 5000</code>.
+It means that for concurrency less than 10, latency will be no more than 2 millis; for concurrency 11 - 50 latency is 2-5 millis;
+for concurrency 51 - 120 latency is 5 - 20 millis, anything above will be served with 20 - 5000 millis delay.</p>
+<p>Stats are gathered by <code>ServiceStatsRecorder</code> which records number of accepted and rejected requests, latencies per RPC call.
+Leases are produced by <code>StaticLeaseSender</code> which allows constant number of requests (<code>ALLOWED_REQUESTS</code> property) every second.</p>
+<p>Both are wired up on <code>ServerRSocketFactory</code>:</p>
+<pre><code class="language-properties" data-lang="properties">    Lease.Configurer leases =
+        leaseController -&gt; {
+          ConstantLeaseController constantLeaseController =
+              new ConstantLeaseController(
+                  leaseController,
+                  inetSocketAddress,
+                  leaseTimeToLive,
+                  leaseAllowedRequests);
+          return Optional.of(constantLeaseController);
+        };
+
+RSocketFactory
+     .receive()
+     .lease(leases)
+</code></pre><p>Proxy relies on <code>LeastLoadedBalancerRSocket</code> connecting to backend servers provided with <code>SERVERS</code> property. Property contains
+set of addresses in form <code>localhost:8309,localhost:8310,localhost:8311</code>. <code>LeastLoadedBalancerRSocket</code> selects RSocket with highest
+availability to serve next request, and switches to round-robin once all RSockets availability is exhausted.</p>
+<p>Client connects proxy and sends 1000 requests per second to RSocket-RPC service.</p>
+<h3 id="unbounded-leased-requests-9999">Unbounded leased requests: 9999</h3>
+<p>We start testing with effectively unbounded allowed requests (9999) on 3 services: <code>localhost:8309,8310,8311</code></p>
+<pre><code class="language-properties" data-lang="properties">./lease_server.sh localhost:8309 9999
+./lease_server.sh localhost:8310 9999
+./lease_server.sh localhost:8311 9999
+</code></pre><p>Proxy</p>
+<pre><code class="language-properties" data-lang="properties">./lease_proxy.sh localhost:8308 localhost:8309,localhost:8310,localhost:8311
+</code></pre><p>Client</p>
+<pre><code class="language-properties" data-lang="properties">`./lease_client.sh localhost:8308`
+</code></pre><p>On client we see there are no rejected requests as each of 3 services provide 9999 allowed requests that is more than enough to fullfill client&rsquo;s 1000 rps.
+Response p99 latency is expectedly subpar - around 5000ms.</p>
+<pre><code class="language-properties" data-lang="properties">15:16:26.068 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client ================================================================================
+15:16:26.068 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8310: 322
+15:16:26.068 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8309: 317
+15:16:26.068 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8311: 335
+15:16:26.068 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses p99 latency millis: 4877
+15:16:26.069 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Rejected requests: 0
+</code></pre><p>Similar stats are reported by services themselves</p>
+<pre><code class="language-properties" data-lang="properties">15:17:47.101 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service localhost:8311 accepted 329 requests
+15:17:47.101 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service call Service/response latency is 4898 millis
+15:17:47.101 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server responder sends new lease, allowed requests is 9999, time-to-live is 1000 millis
+</code></pre><h3 id="moderate-leased-requests-100">Moderate leased requests: 100</h3>
+<p>On client we see there are 300 accepted and 700 rejected requests. Latency is just around 20 millis.</p>
+<pre><code class="language-properties" data-lang="properties">15:25:44.430 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client ================================================================================
+15:25:44.430 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8309: 100
+15:25:44.430 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8310: 100
+15:25:44.430 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8311: 100
+15:25:44.430 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses p99 latency millis: 19
+15:25:44.430 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Rejected requests: 700
+</code></pre><p>Service stats correspond client numbers: 100 accepted requests was leased by each service, 233 rejected and same latency - 20 millis.</p>
+<pre><code class="language-properties" data-lang="properties">15:25:44.087 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server ================================================================================
+15:25:44.087 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service localhost:8310 accepted 100 requests
+15:25:44.087 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service localhost:8310 rejected 233 requests
+15:25:44.087 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service call Service/response latency is 19 millis
+15:25:44.087 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server responder sends new lease, allowed requests is 100, time-to-live is 1000 millis
+</code></pre><h3 id="small-leased-requests-30">Small leased requests: 30</h3>
+<p>Now client reports acceptable latency of 4 millis with 90 accepted and 910 rejected requests</p>
+<pre><code class="language-properties" data-lang="properties">15:32:00.926 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client ================================================================================
+15:32:00.926 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8310: 30
+15:32:00.926 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8309: 30
+15:32:00.926 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses from localhost:8311: 30
+15:32:00.927 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Responses p99 latency millis: 4
+15:32:00.927 parallel-1 com.jauntsdn.rsocket.lease.showcase.Client Rejected requests: 910
+</code></pre><p>Services stats correlate</p>
+<pre><code class="language-properties" data-lang="properties">15:33:13.725 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server ================================================================================
+15:33:13.725 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service localhost:8310 accepted 30 requests
+15:33:13.725 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service localhost:8310 rejected 304 requests
+15:33:13.725 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server service call Service/response latency is 4 millis
+15:33:13.725 reactor-tcp-epoll-2 com.jauntsdn.rsocket.lease.showcase.Server responder sends new lease, allowed requests is 30, time-to-live is 1000 millis
+</code></pre><p>Results are summarized below:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Leased requests   </th>
+<th align="left">Response latency   </th>
+<th align="left">Accepted requests   </th>
+<th align="left">Rejected requests   </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">9999</td>
+<td align="left">4877</td>
+<td align="left">974</td>
+<td align="left">0</td>
+</tr>
+<tr>
+<td align="left">100</td>
+<td align="left">19</td>
+<td align="left">300</td>
+<td align="left">700</td>
+</tr>
+<tr>
+<td align="left">30</td>
+<td align="left">4</td>
+<td align="left">90</td>
+<td align="left">910</td>
+</tr>
+</tbody>
+</table>
+<p> <br>
+RSocket requests leasing is central protocol feature which enables concurrency and latency control without guesswork on caller side.
+It helps applications remain stable and can greatly reduce timeout related errors. It is transparent for RSocket services - there are no leasing related references in
+service API definitions or implementations. Static leases sender can be substituted with smarter one that estimates allowed requests based on
+Responder statistics and target service call latency. Algorithms are known and described at <a href="https://github.com/Netflix/concurrency-limits">concurrency-limits</a> -
+we will see that in action soon reported on the pages of this blog.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

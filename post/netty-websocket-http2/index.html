@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>WebSockets over http/2: implementing RFC8441 with Netty</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">WebSockets over http/2: implementing RFC8441 with Netty</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>WebSockets over http/2: implementing RFC8441 with Netty</h2>
+        <h5>July 30, 2020</h5>
+        
+<a href="https://jauntsdn.github.io/tags/netty"><kbd class="item-tag">netty</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/websocket"><kbd class="item-tag">websocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/http2"><kbd class="item-tag">http2</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><p>Today I&rsquo;d like to introduce you to <a href="https://github.com/jauntsdn/netty-websocket-http2">netty-websocket-http2</a> - implementation of
+websockets-over-http2, first release of which is about to land on the Maven Central.</p>
+<p>Novel protocol graduated out of draft phase in September 2018, and is one of the smallest RFCs I&rsquo;ve ever seen -
+just 4 pages of actual specification.</p>
+<p>Despite tiny size It opens some interesting possibilities - for both clients and servers.</p>
+<p>Protocol defines <a href="https://tools.ietf.org/html/rfc8441#section-4">Extended CONNECT Method</a> - mechanism for establishing byte
+stream tunnel over single http2 stream, and addresses biggest flaw of websocket over http1 - need for a separate tcp
+connection per websocket.</p>
+<p>This benefits servers because clients use single connection for both http and rpc calls; lowers client latency since tcp &amp; tls handshake steps
+are eliminated; enables simpler gateways - same software stack for internet traffic implemented in terms of http2 streams;
+adds priority support for http/rpc requests of the same connection.</p>
+<p>One drawback is limited widespread - the only first-tier browser having protocol support is Mozilla Firefox.
+However <a href="https://github.com/warmcat/libwebsockets">libwebsockets</a> - popular C networking library - also supports RFC8441,
+which means It becomes viable option if primary clients are native mobile.</p>
+<p><strong>Update from May 2021</strong>.<br>
+Chrome web browser supports websockets-over-http2, which together with Firefox constitutes
+~85% of web clients. On server side protocol is supported by <a href="https://www.haproxy.com/blog/announcing-haproxy-2-4/#http-2-websockets">haproxy</a>
+and <a href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/http/upgrades#websocket-over-http-2-or-http-3-hops">envoy proxy</a>.</p>
+<h3 id="scope">Scope</h3>
+<p>Library is addressing 2 use cases: for application servers and clients,
+It is transparent use of existing http1 websocket handlers on top of http2 streams; for gateways/proxies,
+It is websockets-over-http2 support with no http1 dependencies and minimal overhead.</p>
+<h3 id="websocket-channel-api">websocket channel API</h3>
+<p>Intended for application servers and clients.<br>
+Allows transparent usage of existing http1 websocket handlers on top of http2 stream.</p>
+<ul>
+<li>Server</li>
+</ul>
+<pre><code class="language-properties" data-lang="properties">EchoWebSocketHandler http1WebSocketHandler = new EchoWebSocketHandler();
+
+ Http2WebSocketServerHandler http2webSocketHandler =
+       Http2WebSocketServerBuilder.create()
+              .acceptor(
+                   (ctx, path, subprotocols, request, response) -&gt; {
+                     switch (path) {
+                       case &quot;/echo&quot;:
+                         if (subprotocols.contains(&quot;echo.jauntsdn.com&quot;)
+                             &amp;&amp; acceptUserAgent(request, response)) {
+                           /*selecting subprotocol for accepted requests is mandatory*/
+                           Http2WebSocketAcceptor.Subprotocol
+                                  .accept(&quot;echo.jauntsdn.com&quot;, response);
+                           return ctx.executor()
+                                  .newSucceededFuture(http1WebSocketHandler);
+                         }
+                         break;
+                       case &quot;/echo_all&quot;:
+                         if (subprotocols.isEmpty() 
+                                  &amp;&amp; acceptUserAgent(request, response)) {
+                           return ctx.executor()
+                                  .newSucceededFuture(http1WebSocketHandler);
+                         }
+                         break;
+                     }
+                     return ctx.executor()
+                         .newFailedFuture(
+                             new WebSocketHandshakeException(
+                                  &quot;websocket rejected, path: &quot; + path));
+                   })
+              .build();
+
+      ch.pipeline()
+           .addLast(sslHandler, 
+                    http2frameCodec, 
+                    http2webSocketHandler);
+</code></pre><ul>
+<li>Client</li>
+</ul>
+<pre><code class="language-properties" data-lang="properties"> Channel channel =
+        new Bootstrap()
+            .handler(
+                new ChannelInitializer&lt;SocketChannel&gt;() {
+                  @Override
+                  protected void initChannel(SocketChannel ch) {
+
+                    Http2WebSocketClientHandler http2WebSocketClientHandler =
+                        Http2WebSocketClientBuilder.create()
+                            .handshakeTimeoutMillis(15_000)
+                            .build();
+
+                    ch.pipeline()
+                        .addLast(
+                            sslHandler,
+                            http2FrameCodec,
+                            http2WebSocketClientHandler);
+                  }
+                })
+            .connect(address)
+            .sync()
+            .channel();
+
+Http2WebSocketClientHandshaker handShaker = 
+            Http2WebSocketClientHandshaker.create(channel);
+
+Http2Headers headers =
+   new DefaultHttp2Headers()
+            .set(&quot;user-agent&quot;, &quot;jauntsdn-websocket-http2-client/1.1.2&quot;);
+
+ChannelFuture handshake =
+   /*http1 websocket handler*/
+   handShaker.handshake(&quot;/echo&quot;, headers, new EchoWebSocketHandler());
+    
+handshake.channel().writeAndFlush(new TextWebSocketFrame(&quot;hello http2 websocket&quot;));
+</code></pre><p>Successfully handshaked http2 stream spawns websocket subchannel, and provided http1 websocket handlers are added
+to its pipeline.</p>
+<p>Runnable demo is available in <code>netty-websocket-http2-example</code> module -
+<a href="https://github.com/jauntsdn/netty-websocket-http2/blob/develop/netty-websocket-http2-example/src/main/java/com/jauntsdn/netty/handler/codec/http2/websocketx/example/channelserver/Main.java">channelserver</a>,
+<a href="https://github.com/jauntsdn/netty-websocket-http2/blob/develop/netty-websocket-http2-example/src/main/java/com/jauntsdn/netty/handler/codec/http2/websocketx/example/channelclient/Main.java">channelclient</a>.</p>
+<h3 id="websocket-handshake-only-api">websocket handshake only API</h3>
+<p>Intended for intermediaries/proxies.<br>
+Only verifies whether http2 stream is valid websocket, then passes it down the pipeline as <code>POST</code> request with <code>x-protocol=websocket</code> header.</p>
+<pre><code class="language-properties" data-lang="properties">      Http2WebSocketServerHandler http2webSocketHandler =
+          Http2WebSocketServerBuilder.buildHandshakeOnly();
+
+      Http2StreamsHandler http2StreamsHandler = new Http2StreamsHandler();
+      ch.pipeline()
+           .addLast(sslHandler, 
+                    frameCodec, 
+                    http2webSocketHandler, 
+                    http2StreamsHandler);
+</code></pre><p>Works with both callbacks-style <code>Http2ConnectionHandler</code> and frames based <code>Http2FrameCodec</code>.</p>
+<p>Runnable demo is available in <code>netty-websocket-http2-example</code> module -
+<a href="https://github.com/jauntsdn/netty-websocket-http2/blob/develop/netty-websocket-http2-example/src/main/java/com/jauntsdn/netty/handler/codec/http2/websocketx/example/handshakeserver/Main.java">handshakeserver</a>,
+<a href="https://github.com/jauntsdn/netty-websocket-http2/blob/develop/netty-websocket-http2-example/src/main/java/com/jauntsdn/netty/handler/codec/http2/websocketx/example/channelclient/Main.java">channelclient</a>.</p>
+<h3 id="compression--subprotocols">compression &amp; subprotocols</h3>
+<p>Server/client <code>permessage-deflate</code> compression configuration is shared by all streams</p>
+<pre><code class="language-properties" data-lang="properties">Http2WebSocketServerBuilder.compression(enabled);
+</code></pre><p>or</p>
+<pre><code class="language-properties" data-lang="properties">Http2WebSocketServerBuilder.compression(
+      compressionLevel,
+      allowServerWindowSize,
+      preferredClientWindowSize,
+      allowServerNoContext,
+      preferredClientNoContext);
+</code></pre><p>Client subprotocols are configured on per-path basis</p>
+<pre><code class="language-properties" data-lang="properties">ChannelFuture handshake =
+        handShaker.handshake(&quot;/echo&quot;, &quot;subprotocol&quot;, headers, new EchoWebSocketHandler());
+</code></pre><p>On a server It is responsibility of <code>Http2WebSocketAcceptor</code> to select supported protocol with</p>
+<pre><code class="language-properties" data-lang="properties">Http2WebSocketAcceptor.Subprotocol.accept(subprotocol, response);
+</code></pre><h3 id="lifecycle">lifecycle</h3>
+<p>Handshake events and several shutdown options are available when
+using <code>Websocket channel</code> style APIs.</p>
+<p><strong>handshake events</strong></p>
+<p>Events are fired on parent channel, also on websocket channel if one gets created</p>
+<ul>
+<li><code>Http2WebSocketHandshakeStartEvent</code> (correlationId, path, subprotocols, timestampNanos, requestHeaders)</li>
+<li><code>Http2WebSocketHandshakeErrorEvent</code> (correlationId, path, subprotocols, timestampNanos, responseHeaders, error)</li>
+<li><code>Http2WebSocketHandshakeSuccessEvent</code> (correlationId, path, subprotocols, timestampNanos, responseHeaders)</li>
+</ul>
+<p><strong>graceful shutdown</strong></p>
+<p>Outbound <code>Http2WebSocketLocalCloseEvent</code> on websocket channel pipeline shuts down
+http2 stream by sending empty <code>DATA</code> frame with <code>END_STREAM</code> flag set.</p>
+<p>Graceful stream shutdown by remote is represented with inbound <code>Http2WebSocketRemoteCloseEvent</code> on
+websocket channel pipeline, graceful connection shutdown - with <code>Http2WebSocketRemoteGoAwayEvent</code>.</p>
+<p><strong>shutdown</strong></p>
+<p>Closing websocket channel terminates its http2 stream by sending <code>RST</code> frame.</p>
+<p><strong>validation &amp; write error events</strong></p>
+<p>Both API style handlers send <code>Http2WebSocketHandshakeErrorEvent</code> for invalid websocket-over-http2 and http requests.
+For http2 frame write errors <code>Http2WebSocketWriteErrorEvent</code> is sent on parent channel if auto-close is not enabled;
+otherwise exception is delivered with <code>ChannelPipeline.fireExceptionCaught</code> followed by immediate close.</p>
+<h3 id="flow-control">flow control</h3>
+<p>Inbound flow control is done automatically as soon as <code>DATA</code> frames are received.
+Library relies on netty&rsquo;s <code>DefaultHttp2LocalFlowController</code> for refilling receive window.</p>
+<p>Outbound flow control is expressed as websocket channels writability change on send window
+exhaust/refill, provided by <code>DefaultHttp2RemoteFlowController</code>.</p>
+<h3 id="websocket-stream-weight">websocket stream weight</h3>
+<p>Initial stream weight is configured with</p>
+<pre><code class="language-properties" data-lang="properties">Http2WebSocketClientBuilder.streamWeight(weight);
+</code></pre><p>it can be updated by firing <code>Http2WebSocketStreamWeightUpdateEvent</code> on websocket channel pipeline.
+Currently blocked by <a href="https://github.com/netty/netty/issues/10416">netty bug</a>.</p>
+<h3 id="performance">performance</h3>
+<p>Library relies on capabilities provided by netty&rsquo;s <code>Http2ConnectionHandler</code> so performance characteristics should be similar.
+<a href="https://github.com/jauntsdn/netty-websocket-http2/tree/develop/netty-websocket-http2-perftest/src/main/java/com/jauntsdn/netty/handler/codec/http2/websocketx/perftest">netty-websocket-http2-perftest</a>
+module contains application that gives rough throughput/latency estimate. The application is started with <code>perf_server.sh</code>, <code>perf_client.sh</code>.</p>
+<p>On modern box one can expect following results for single websocket:</p>
+<pre><code class="language-properties" data-lang="properties">19:31:58.537 epollEventLoopGroup-2-1 com.jauntsdn.netty.handler.codec.http2.websocketx.perftest.client.Main p50 =&gt; 435 micros
+19:31:58.537 epollEventLoopGroup-2-1 com.jauntsdn.netty.handler.codec.http2.websocketx.perftest.client.Main p95 =&gt; 662 micros
+19:31:58.537 epollEventLoopGroup-2-1 com.jauntsdn.netty.handler.codec.http2.websocketx.perftest.client.Main p99 =&gt; 841 micros
+19:31:58.537 epollEventLoopGroup-2-1 com.jauntsdn.netty.handler.codec.http2.websocketx.perftest.client.Main throughput =&gt; 205874 messages
+19:31:58.537 epollEventLoopGroup-2-1 com.jauntsdn.netty.handler.codec.http2.websocketx.perftest.client.Main throughput =&gt; 201048.83 kbytes
+
+</code></pre><p>To evaluate performance with multiple connections we compose an application comprised with simple echo server, and client
+sending batches of messages periodically over single websocket per connection (approximately models chat application).</p>
+<p>With 25k active connections each sending batches of 5-10 messages of 0.2-0.5 KBytes over single websocket every 15-30seconds,
+the results are as follows (measured over time spans of 5 seconds):</p>
+<pre><code class="language-properties" data-lang="properties">11:32:44.080 pool-2-thread-1 com.jauntsdn.netty.handler.codec.http2.websocketx.stresstest.client.Main connection success   ==&gt; 25000
+11:32:44.080 pool-2-thread-1 com.jauntsdn.netty.handler.codec.http2.websocketx.stresstest.client.Main handshake success    ==&gt; 25000
+11:32:44.080 pool-2-thread-1 com.jauntsdn.netty.handler.codec.http2.websocketx.stresstest.client.Main messages p99, micros ==&gt; 177
+11:32:44.080 pool-2-thread-1 com.jauntsdn.netty.handler.codec.http2.websocketx.stresstest.client.Main messages p50, micros ==&gt; 91
+</code></pre><h3 id="examples">examples</h3>
+<p><a href="https://github.com/jauntsdn/netty-websocket-http2/tree/develop/netty-websocket-http2-example/src/main/java/com/jauntsdn/netty/handler/codec/http2/websocketx/example">netty-websocket-http2-example</a>
+module contains demos showcasing both API styles,
+with this library/browser as clients.</p>
+<ul>
+<li><code>channelserver, channelclient</code> packages for websocket subchannel API demos.</li>
+<li><code>handshakeserver, channelclient</code> packages for handshake only API demo.</li>
+<li><code>lwsclient</code> package for client demo that runs against <a href="https://libwebsockets.org/testserver/">https://libwebsockets.org/testserver/</a> which hosts websocket-over-http2
+server implemented with <a href="https://github.com/warmcat/libwebsockets">libwebsockets</a> - popular C-based networking library.</li>
+</ul>
+<h3 id="browser-example">browser example</h3>
+<p><code>Channelserver</code> example serves web page at <code>https://www.localhost:8099</code> that sends pings to <code>/echo</code> endpoint.</p>
+<p>Currently only <code>Mozilla Firefox</code> and latest <code>Google Chrome</code> support websockets-over-http2.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

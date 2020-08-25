@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</h2>
+        <h5>May 20, 2021</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><p>Exchanging millions of buffers per second with plain RSockets is not useful for business applications because
+they need structured data instead of raw bytes.</p>
+<p>That&rsquo;s why there was <code>RSocket-RPC</code> - remote procedure call system on top of Protocol Buffers with
+language agnostic service definitions. It uses code-generation for performance equivalent to hand-written code.</p>
+<p>Protocol buffers have tiny on-wire overhead, acceptable performance and is native format of Grpc - important
+for interoperability and available <a href="https://github.com/grpc-ecosystem/awesome-grpc">tooling</a> that can be used directly, or easily adapted.</p>
+<h3 id="alternative-rsocket-rpc">Alternative RSocket-RPC</h3>
+<p>Original <code>RSocket/RSocket-RPC</code> is based on <a href="https://jauntsdn.github.io/post/rsocket-million-streams-2/">problematic</a> <code>RSocket/RSocket-java</code>
+and seems is not supported anymore (generated RPC stubs do not compile). Approach based on code generation
+and single efficient data format was dropped in favour of data abstraction and runtime
+<a href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#rsocket-spring">tricks</a> to translate
+between serialized and structured messages.</p>
+<p>For alternative RSocket-RPC, code generation was redone to align It with <code>jauntsdn/RSocket-reactor</code>.</p>
+<p>Let&rsquo;s enumerate outstanding differences:</p>
+<ul>
+<li>
+<p>Compact encoding of both RPC calls and user-provided metadata: in majority of cases RPC overhead is only 3-4 bytes.</p>
+</li>
+<li>
+<p>Noticeably higher performance - result of improvements in <a href="https://jauntsdn.github.io/post/rsocket-jvm/">jauntsdn/rsocket-reactor</a>,
+less pressure on memory allocator and compact metadata encoding: 1.3 million requests per second with request-response,
+3 million messages per second with request-stream, per core.</p>
+</li>
+<li>
+<p>Native compatibility with Grpc - if combined with respective transport. There is no need for separate binary or IDL
+sharing schemes.</p>
+</li>
+</ul>
+<h3 id="grpc-transport">GRPC transport</h3>
+<p>For internet clients, RSocket-RPC has limited utility because existing solutions (HTTP/Grpc) are mature and already
+good enough. This relates to both client libraries and API gateways - haproxy, nginx and recently even AWS API gateway
+support Grpc. Some of them have features and performance that would require years of dedicated teams to reach.</p>
+<p>In data center environment, RSocket/RSocket-RPC has several advantages over Http2/Grpc, main of them is considerable performance gains.</p>
+<p>Fortunately, RSocket streams are able to accommodate Http2 streams which then may be routed to RSocket-RPC origins over TCP.</p>
+<p>This way RSocket-RPC services can be efficiently accessed by existing Grpc clients - the message format is same so there
+is no penalty of cross-format data translation.</p>
+<p>Scope and features:</p>
+<ul>
+<li>
+<p>Server only transport - sufficient for external Grpc clients support.</p>
+</li>
+<li>
+<p>Only client initiated requests are allowed - this is required by Http2 streams semantics.
+Requests support <code>request-response</code>, <code>server-stream</code>, <code>client-stream</code>, <code>bidistream</code> interactions.</p>
+</li>
+<li>
+<p>Assume API gateway/proxy between RSocket server and internet clients - no quic/http3 stack or message compression;
+implies fast, reliable network for simpler HTTP2/RSocket flow control coordination.</p>
+</li>
+</ul>
+<p>Like TCP and Unix sockets, GRPC transport can be used with any <a href="https://jauntsdn.github.io/post/rsocket-jvm/">jauntsdn/RSocket-JVM</a>
+based implementation, and was verified with <code>RSocket-reactor</code> and <code>RSocket-rxjava</code>.</p>
+<p>It is lean dependency-wise: only <code>io.netty:netty-codec-http2</code> and <code>jauntsdn:rsocket-transport</code>,
+no <code>Protobuf</code> related libraries. Compiled JAR is less than 60 KBytes in size.</p>
+<h3 id="performance">Performance</h3>
+<p>Performance was evaluated on commodity box running linux 5.4.0 with EPOLL IO and non-TLS TCP transport.
+JVM is OpenJDK 11.0.11.</p>
+<p>Its purpose is comparison against plain RSocket with <code>RSocket-reactor</code> on single core throughput.</p>
+<p>This test gives estimate of per-request (with request-response) and per-message (request-stream, channel) RPC overhead.</p>
+<p>Message size is selected small (less than 10 bytes) so most of CPU time is spent on RPC request
+encoding &amp; message serialization instead of memory copy, which is better gauge for RPC efficiency.</p>
+<h3 id="rsocket-rpc">RSocket-RPC</h3>
+<ul>
+<li>REQUEST-STREAM</li>
+</ul>
+<p>Single connection / single core stream throughput test.</p>
+<pre><code class="language-properties" data-lang="properties">16:55:09.484 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 3094767
+16:55:10.484 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 2997843
+16:55:11.484 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 2996896
+16:55:12.484 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 3004344
+16:55:13.484 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 3000798
+16:55:14.484 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.stream.client.Main client received messages: 3002806
+</code></pre><p>3M msg/sec vs 3.5M msg/sec demonstrated by Plain RSocket, or 14% worse throughput.</p>
+<p>This small overhead is caused by Protobuf serialization only as there is single continuous stream per connection
+(for N response messages there is 1 request).</p>
+<ul>
+<li>REQUEST-CHANNEL</li>
+</ul>
+<p>Single connection / single core stream throughput test.</p>
+<p>Server</p>
+<pre><code class="language-properties" data-lang="properties">16:56:20.876 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.rpc.examples.channel.server.Main server received messages: 1726494
+16:56:21.874 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.rpc.examples.channel.server.Main server received messages: 1734271
+16:56:22.877 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.rpc.examples.channel.server.Main server received messages: 1734271
+16:56:23.875 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.rpc.examples.channel.server.Main server received messages: 1718717
+16:56:24.875 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.rpc.examples.channel.server.Main server received messages: 1710940
+16:56:25.874 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.rpc.examples.channel.server.Main server received messages: 1726494
+</code></pre><p>Client</p>
+<pre><code class="language-properties" data-lang="properties">16:56:21.804 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.channel.client.Main client received messages: 1742048
+16:56:22.804 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.channel.client.Main client received messages: 1726494
+16:56:23.803 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.channel.client.Main client received messages: 1718717
+16:56:24.804 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.channel.client.Main client received messages: 1718717
+16:56:25.803 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.channel.client.Main client received messages: 1726494
+16:56:26.803 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.channel.client.Main client received messages: 1734271
+</code></pre><p>With request-channel RSocket-RPC exchanges ~3.4M msg/sec, while plain RSocket is at 4.8M msg/sec - 29% slower due
+to additional serialization/deserialization of request stream (for N response messages there is N request messages).</p>
+<ul>
+<li>REQUEST-RESPONSE</li>
+</ul>
+<p>Single connection / single core continuous requests window throughput test.</p>
+<pre><code class="language-properties" data-lang="properties">16:58:16.609 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1329611
+16:58:17.607 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1320154
+16:58:18.608 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1321358
+16:58:19.609 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1317221
+16:58:20.607 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1321927
+16:58:21.607 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.rpc.examples.response.client.Main client received messages: 1329611
+</code></pre><p>RSocket-RPC demonstrates ~1.3M msg (requests)/sec, or 38% worse throughput compared to plain RSocket (2.1M requests / sec).</p>
+<p>Substantial difference is due to additional overhead of request metadata encoding for each outbound message under request-response model
+(for N responses there is N requests).</p>
+<h3 id="rsocket-grpc">RSocket-GRPC</h3>
+<p>Test consists of RSocket-RPC server with RSocket-GRPC transport, and Grpc client based on grpc-java 1.37.0 over Netty,
+under OpenJDK 11.0.11.</p>
+<p>Services and messages are identical to ones from RSocket-RPC test.</p>
+<p>Each result is compared with <code>grpc-java</code>-only setup.</p>
+<ul>
+<li>SERVER-STREAM</li>
+</ul>
+<p>Single stream throughput test.</p>
+<pre><code class="language-properties" data-lang="properties">17:52:03.752 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.stream.Main Client received messages: 1428347
+17:52:04.752 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.stream.Main Client received messages: 1454406
+17:52:05.752 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.stream.Main Client received messages: 1568482
+17:52:06.752 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.stream.Main Client received messages: 1480556
+17:52:07.752 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.stream.Main Client received messages: 1386296
+17:52:08.752 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.stream.Main Client received messages: 1492142
+</code></pre><p>Server-stream is 50% slower compared to RSocket-RPC over TCP: the reason is chattiness of Http2, overhead of grpc-java
+on client side, netty http2 codec on server side.</p>
+<p>On the other hand numbers correspond to the best case with <code>grpc-java</code> only setup which has distinctively more fluctuations
+in 0.8-1.5M msg/sec range.</p>
+<ul>
+<li>BIDI-STREAM</li>
+</ul>
+<p>Single stream throughput test.</p>
+<pre><code class="language-properties" data-lang="properties">17:53:04.856 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.bidistream.Main ==&gt; Bidi stream sent messages: 709548, received messages: 458496
+17:53:05.856 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.bidistream.Main ==&gt; Bidi stream sent messages: 790257, received messages: 291072
+17:53:06.856 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.bidistream.Main ==&gt; Bidi stream sent messages: 828460, received messages: 276224
+17:53:07.856 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.bidistream.Main ==&gt; Bidi stream sent messages: 831259, received messages: 275083
+17:53:08.856 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.bidistream.Main ==&gt; Bidi stream sent messages: 600732, received messages: 818881
+17:53:09.856 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.bidistream.Main ==&gt; Bidi stream sent messages: 664493, received messages: 656692
+17:53:10.856 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.bidistream.Main ==&gt; Bidi stream sent messages: 850823, received messages: 280517
+</code></pre><p>Exchange is around 1.2M msg/sec, comparable to <code>grpc-java</code> only setup.</p>
+<ul>
+<li>REQUEST-RESPONSE</li>
+</ul>
+<p>Continuous requests window throughput test.</p>
+<pre><code class="language-properties" data-lang="properties">10:52:47.579 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.response.Main Client received messages: 101663
+10:52:48.579 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.response.Main Client received messages: 103388
+10:52:49.579 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.response.Main Client received messages: 101563
+10:52:50.579 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.response.Main Client received messages: 101165
+10:52:51.579 pool-2-thread-1 com.jauntsdn.rsocket.showcase.grpc.response.Main Client received messages: 101255
+</code></pre><p>The result is around 100K msg (requests)/sec, same with <code>grpc-java</code> only setup.</p>
+<p>Numbers do not look impressive compared to order of magnitude faster RSocket-RPC counterpart (1.3M requests/sec),
+but this is what current <code>Http2/Grpc-java/Netty</code> stack is able to offer.</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-jvm/">RSocket-JVM: streamlining implementation for each vendor platform</a></h4>
+    <h5>April 22, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

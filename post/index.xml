@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on JAUNTSDN</title>
+    <link>https://jauntsdn.github.io/post/</link>
+    <description>Recent content in Posts on JAUNTSDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 01 Feb 2023 10:18:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://jauntsdn.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>📌 Summary: alternative RSocket library for high performance network applications on JVM</title>
+      <link>https://jauntsdn.github.io/post/rsocket-summary/</link>
+      <pubDate>Wed, 01 Feb 2023 10:18:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-summary/</guid>
+      <description>Summary  lean &amp;amp; very fast GRPC-like services on JVM with rich streaming model over multiple data-center and internet transports; multiple APIs: CompletableFuture &amp;amp; virtual threads; traditional streaming GRPC-stub (StreamObserver), or reactive with smallrye-mutiny, rxjava, reactor pluggable networking: tcp, unix sockets, vm sockets; grpc, websockets, websockets-over-http2; service APIs / codegen stubs (Message-Streams) are split from library runtime (RSocket-JVM, including network transports, load estimators, load balancers, metrics) transparent origin (RPC) &amp;amp; proxy load estimation for low-cost yet efficient load balancers; native image support with graalvm.</description>
+    </item>
+    
+    <item>
+      <title>Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</title>
+      <link>https://jauntsdn.github.io/post/rsocket-vs-spring/</link>
+      <pubDate>Fri, 03 Sep 2021 10:18:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-vs-spring/</guid>
+      <description>Earlier this year we described weaknesses of Spring RSocket-java implementation that resulted in awful throughput, latency &amp;amp; garbage production: key metrics for core networking library.
+Latest Spring-RSocket uses RSocket/RSocket-java version 1.1.1, and wraps up almost a year of progress made on the library.
+The goal of this post is to re-evaluate that progress against both current jauntsdn/RSocket-RPC (not yet publicly available), and grpc/grpc-java.
+Jauntsdn-RSocket-RPC vs Spring-RSocket-CBOR: quantitative comparison jauntsdn/RSocket-RPC is remote procedure call system using streaming libraries (GRPC-API or several reactive - including RSocket-reactor) for networking &amp;amp; APIs, and Protocol Buffers as sole data format.</description>
+    </item>
+    
+    <item>
+      <title>Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</title>
+      <link>https://jauntsdn.github.io/post/rsocket-grpc/</link>
+      <pubDate>Thu, 20 May 2021 08:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-grpc/</guid>
+      <description>Exchanging millions of buffers per second with plain RSockets is not useful for business applications because they need structured data instead of raw bytes.
+That&amp;rsquo;s why there was RSocket-RPC - remote procedure call system on top of Protocol Buffers with language agnostic service definitions. It uses code-generation for performance equivalent to hand-written code.
+Protocol buffers have tiny on-wire overhead, acceptable performance and is native format of Grpc - important for interoperability and available tooling that can be used directly, or easily adapted.</description>
+    </item>
+    
+    <item>
+      <title>RSocket-JVM: streamlining implementation for each vendor platform</title>
+      <link>https://jauntsdn.github.io/post/rsocket-jvm/</link>
+      <pubDate>Thu, 22 Apr 2021 08:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-jvm/</guid>
+      <description>Motivation In practice reactive applications - as a method to model software and programming paradigm of composable flow controlled streams - viable mainly within JVM context.
+It has necessary ecosystem provided by several competing platforms: smallrye-mutiny by Red Hat, project reactor by (ex-)Pivotal, and community-maintained rxjava.
+Libraries are interoperable on same VM because their APIs semantically conform to reactive-streams specification, with 3 of 4 having binary compatibility - streams may be combined directly without writing any adapter code.</description>
+    </item>
+    
+    <item>
+      <title>Serving one million streams. Part 2. Double performance over original RSocket library</title>
+      <link>https://jauntsdn.github.io/post/rsocket-million-streams-2/</link>
+      <pubDate>Wed, 20 Jan 2021 10:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-million-streams-2/</guid>
+      <description>New year break is good time for continuing on topic of one million of streams - serving huge amount of RSocket streams simultaneously with single, mid-level commodity computer.
+The original library gave in around 500k streams - mark where server was still stable, at whopping 500-600 MBytes/s allocation rate - unexpected numbers for RSockets just sending same byte buffer periodically, using library advertising zero-copy capability.
+Interesting question is whether we hit natural limit, caused by current state of JVM runtime and libraries, or is a consequence of design choices driven at large by &amp;ldquo;ideological&amp;rdquo; and marketing motives that eventually resulted in implementation having significant parts happen to exist just for burning CPU cycles - both directly and through garbage collection?</description>
+    </item>
+    
+    <item>
+      <title>WebSockets over http/2: implementing RFC8441 with Netty</title>
+      <link>https://jauntsdn.github.io/post/netty-websocket-http2/</link>
+      <pubDate>Thu, 30 Jul 2020 11:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/netty-websocket-http2/</guid>
+      <description>Today I&amp;rsquo;d like to introduce you to netty-websocket-http2 - implementation of websockets-over-http2, first release of which is about to land on the Maven Central.
+Novel protocol graduated out of draft phase in September 2018, and is one of the smallest RFCs I&amp;rsquo;ve ever seen - just 4 pages of actual specification.
+Despite tiny size It opens some interesting possibilities - for both clients and servers.
+Protocol defines Extended CONNECT Method - mechanism for establishing byte stream tunnel over single http2 stream, and addresses biggest flaw of websocket over http1 - need for a separate tcp connection per websocket.</description>
+    </item>
+    
+    <item>
+      <title>Serving one million streams. Part 1. RSocket limits on the JVM</title>
+      <link>https://jauntsdn.github.io/post/rsocket-million-streams-1/</link>
+      <pubDate>Wed, 24 Jun 2020 19:30:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-million-streams-1/</guid>
+      <description>One of the interesting topics is estimation of RSocket limits in setup that approximates gateway serving tens of thousands clients.
+There are numerous reports focusing on few streams over single connection, with emphasis on huge throughput. However this mode is not intrinsical for real server. Even though gateways are more likely to be cpu bound than IO bound, we can relax this assumption by making server logic trivial (just echo back incoming messages), to see how RSocket behaves under idealized conditions when major resource consumption is related to IO.</description>
+    </item>
+    
+    <item>
+      <title>Service concurrency limiting with RSocket request leases</title>
+      <link>https://jauntsdn.github.io/post/rsocket-lease-concurrency-limiting/</link>
+      <pubDate>Thu, 09 Apr 2020 17:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-lease-concurrency-limiting/</guid>
+      <description>This is first post in advanced applications of RSocket series, and topic for today is less known yet essential protocol feature - requests leasing.
+We know that single RSocket stream is naturally bounded due to Reactive Streams semantics - there is no more in-flight messages than demanded with receiver Subscription.
+However limiting outstanding messages per request is not useful without limiting requests concurrency.
+For services, growing requests unbounded exhausts their backing resources and leads to latency surge.</description>
+    </item>
+    
+    <item>
+      <title>RSocket: short introduction</title>
+      <link>https://jauntsdn.github.io/post/rsocket-intro/</link>
+      <pubDate>Tue, 17 Mar 2020 11:30:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-intro/</guid>
+      <description>Description from official RSocket-java repository
+RSocket is a binary protocol for use on byte stream transports... It enables the following symmetric interaction models via async message passing over a single connection.. leaves bits of mystery unless reader is interested enough to skim over lengthy FAQ and motivations documents. This post is one page size summary of distinctive RSocket features that make It a good companion for Http2/GRPC.
+Low latency RSocket provides means for maintaining low latency under high throughput by limiting incoming and outgoing message queue size on both sides of connection:</description>
+    </item>
+    
+  </channel>
+</rss>

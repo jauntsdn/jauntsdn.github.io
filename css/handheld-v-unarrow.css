@@ -1,0 +1,24 @@
+.intro > h1 {
+    color: #757575;
+    font-size: 58px;
+}
+
+.intro > h2 {
+    color: #757575;
+    font-size: 15px;
+}
+
+.mstreams {
+    width: auto;
+    transform: translateY(15vh);
+}
+
+.mstreams-capt {
+    font-size: 16px;
+    text-decoration: underline; 
+}
+
+.mstreams-desc {
+   font-size: 16px;
+   padding-left: 18px;
+}

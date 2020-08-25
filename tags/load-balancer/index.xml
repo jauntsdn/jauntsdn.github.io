@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>load-balancer on JAUNTSDN</title>
+    <link>https://jauntsdn.github.io/tags/load-balancer/</link>
+    <description>Recent content in load-balancer on JAUNTSDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 09 Apr 2020 17:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://jauntsdn.github.io/tags/load-balancer/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Service concurrency limiting with RSocket request leases</title>
+      <link>https://jauntsdn.github.io/post/rsocket-lease-concurrency-limiting/</link>
+      <pubDate>Thu, 09 Apr 2020 17:00:00 +0200</pubDate>
+      
+      <guid>https://jauntsdn.github.io/post/rsocket-lease-concurrency-limiting/</guid>
+      <description>This is first post in advanced applications of RSocket series, and topic for today is less known yet essential protocol feature - requests leasing.
+We know that single RSocket stream is naturally bounded due to Reactive Streams semantics - there is no more in-flight messages than demanded with receiver Subscription.
+However limiting outstanding messages per request is not useful without limiting requests concurrency.
+For services, growing requests unbounded exhausts their backing resources and leads to latency surge.</description>
+    </item>
+    
+  </channel>
+</rss>

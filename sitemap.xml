@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>https://jauntsdn.github.io/</loc>
+    <lastmod>2023-02-01T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/java/</loc>
+    <lastmod>2023-02-01T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/mstreams/</loc>
+    <lastmod>2023-02-01T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/</loc>
+    <lastmod>2023-02-01T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/rsocket/</loc>
+    <lastmod>2023-02-01T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/</loc>
+    <lastmod>2023-02-01T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-summary/</loc>
+    <lastmod>2023-02-01T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-vs-spring/</loc>
+    <lastmod>2021-09-03T10:18:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-grpc/</loc>
+    <lastmod>2021-05-20T08:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/grpc/</loc>
+    <lastmod>2021-05-20T08:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-jvm/</loc>
+    <lastmod>2021-04-22T08:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-million-streams-2/</loc>
+    <lastmod>2021-01-20T10:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/http2/</loc>
+    <lastmod>2020-07-30T11:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/netty/</loc>
+    <lastmod>2020-07-30T11:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/websocket/</loc>
+    <lastmod>2020-07-30T11:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/netty-websocket-http2/</loc>
+    <lastmod>2020-07-30T11:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-million-streams-1/</loc>
+    <lastmod>2020-06-24T19:30:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/tags/load-balancer/</loc>
+    <lastmod>2020-04-09T17:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-lease-concurrency-limiting/</loc>
+    <lastmod>2020-04-09T17:00:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/post/rsocket-intro/</loc>
+    <lastmod>2020-03-17T11:30:00+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/mstreams/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/mstreams/presentation/plugin/notes/speaker-view/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/software/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://jauntsdn.github.io/categories/</loc>
+  </url>
+  
+</urlset>

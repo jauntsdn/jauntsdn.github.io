@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>RSocket-JVM: streamlining implementation for each vendor platform</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=IBM+Plex+Mono:wght@300;400&">
+
+        <link rel="stylesheet" type="text/css" href="/css/desktop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (min-height: 501px) and (max-height: 800px)" href="/css/laptop.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 500px)" href="/css/handheld-h.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-height: 380px)" href="/css/handheld-h-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 500px)" href="/css/handheld-v.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 410px)" href="/css/handheld-v-narrow.css">
+        <link rel="stylesheet" type="text/css" media="screen and (max-width: 371px)" href="/css/handheld-v-unarrow.css">
+
+        <link rel="stylesheet" type="text/css" media="screen and (min-width: 500px)" href="/css/overflow.css">
+        
+
+        
+            <link rel="icon" href="https://jauntsdn.github.io/favicon.png">
+        
+
+        <style>
+
+    html body {
+        font-family: 'Roboto Slab', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: #2196f3;
+        --border-width:  2px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://jauntsdn.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Slab">
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.70.0" />
+        
+
+        
+
+        
+
+        
+
+    </head>
+
+    <body>
+        
+
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    
+                        <a class="navbar-brand visible-xs" href="#">RSocket-JVM: streamlining implementation for each vendor platform</a>
+                    
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse">
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">home</a></li>
+                            
+                                <li><a href="/mstreams/">mstreams</a></li>
+                            
+                                <li><a href="/software/">software</a></li>
+                            
+                                <li><a href="/post/">blog</a></li>
+                            
+                        </ul>
+                    
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:m.ostroverkhov@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/jauntsdn/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/ostroverkhov/"><i class="fa fa-twitter"></i></a></li>
+                            
+                        </ul>
+                    
+                </div>
+            </div>
+        </nav>
+
+<main>
+
+    <div>
+        <h2>RSocket-JVM: streamlining implementation for each vendor platform</h2>
+        <h5>April 22, 2021</h5>
+        
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+    </div>
+
+    <div align="left" class="content"><h3 id="motivation">Motivation</h3>
+<p>In practice reactive applications - as a method to model software and programming paradigm of composable flow controlled
+streams - viable mainly within JVM context.</p>
+<p>It has necessary ecosystem provided by several competing platforms:
+<a href="https://smallrye.io/smallrye-mutiny">smallrye-mutiny</a> by Red Hat,
+<a href="https://projectreactor.io/docs">project reactor</a> by (ex-)Pivotal,
+and community-maintained <a href="https://www.rxjava.com/">rxjava</a>.</p>
+<p>Libraries are interoperable on same VM because their APIs semantically conform to <a href="https://www.reactive-streams.org/">reactive-streams</a>
+specification, with 3 of 4 having binary compatibility - streams may be combined directly without writing any adapter code.</p>
+<p>On the other hand interprocess and network communication is done with Grpc and Http/2.</p>
+<p>Http is general purpose application protocol to retrieve resources from server to client with request/response model.</p>
+<p>Grpc is also based on Http/2 streams, that&rsquo;s why It is also non-symmetric (only client can initiate requests to server), and has
+byte oriented flow control while Grpc encodes data as messages - protocol buffers.</p>
+<p>Stable Grpc stack is available for wide range of programming languages, however its java impl has &ldquo;awkward&rdquo; streaming APIs,
+lacks composability and produces relatively high volume of per-message garbage.</p>
+<p>Http/Grpc/Graphql is good choice for heterogeneous internet environment as general purpose solution,
+with libraries and tools available for many hardware/os/language combinations.</p>
+<p>For specialized cloud environment which happens to be JVM centric there is another option - RSocket.
+It is binary, symmetric, session level protocol with multiple streaming interactions support, <code>reactive-streams</code> message
+flow control and pluggable transports.</p>
+<p>Initially there was official <code>rsocket/rsocket-java</code> implementation, based on <code>project-reactor</code>.</p>
+<p>Unfortunately all its core features, <code>transports</code> and <code>instrumentation</code> modules are based on
+<code>spring-boot</code> related dependencies that can&rsquo;t be reused on competing platforms.</p>
+<p>Porting <code>rsocket/rsocket-java</code> to each platform would be not only laborious, but also unfeasible effort given
+<a href="https://jauntsdn.github.io/post/rsocket-million-streams-2/">questionable performance</a> of <code>rsocket/rsocket-java</code> post 1.0 release.</p>
+<p>Instead protocol core was reimplemented with minimal, vendor-neutral dependencies so each
+vendor project can be built upon It - <code>rsocket-jvm</code>.</p>
+<p>This way next library development becomes predictable and largely mechanical process - most of the functionality is shared,
+while general structure becomes clear once first implementation is completed.</p>
+<p><code>rsocket-jvm</code> was evaluated with 3 vendor libraries: <code>project-reactor</code>, <code>rxjava</code> &amp; <code>smallrye-mutiny</code>.</p>
+<h3 id="structure">Structure</h3>
+<p>Conceptually all components belong to 5 categories:</p>
+<ul>
+<li>API CONTRACTS.</li>
+</ul>
+<p><a href="https://github.com/jauntsdn/rsocket-jvm/tree/develop/rsocket-messages">RSocket-messages</a> is <code>netty-buffers</code> only project, accompanied by <code>RSocket-&lt;VENDOR&gt;</code>, <code>RSocket-RPC-&lt;VENDOR&gt;</code> pair for
+each vendor library (see <a href="https://github.com/jauntsdn/rsocket-jvm/tree/develop/rsocket-reactor">RSocket-reactor</a>, <a href="https://github.com/jauntsdn/rsocket-jvm/tree/develop/rsocket-rpc-reactor">RSocket-RPC-reactor</a> for example).</p>
+<p>API contracts plus RSocket-RPC-compiler are sufficient for implementing end-user services without exposing unnecessary runtime details.</p>
+<ul>
+<li>TRANSPORT CONTRACT.</li>
+</ul>
+<p>Includes type declarations for transports - components able to send and receive raw bytes. They only depend on <code>rsocket-messages</code>
+so transports may be used with each platform library.</p>
+<ul>
+<li>PROTOCOL COMPONENTS.</li>
+</ul>
+<p>Contain software building blocks implementing major features of the protocol: handshakes, keep-alive,
+requests leasing, session resumption, server graceful close, error handling etc.</p>
+<p>Protocol components do not depend on vendor specific libraries so serve as basis for each platform library.</p>
+<p>Additionally It hosts APIs (but not implementations) that enable end-user application specific code sharing
+across platforms: RSocket interceptors and connection listeners for metrics, requests lease handlers for load estimation,
+resumable session stores and session discovery.</p>
+<ul>
+<li>SHARED MODULES.</li>
+</ul>
+<p>Denote projects utilized by each platform library as ready-to-use components, both
+public and private. Currently these are TCP, Unix sockets &amp; GRPC transports, load estimator and metrics.</p>
+<ul>
+<li>PLATFORM LIBRARIES.</li>
+</ul>
+<p>Top-level component intended for end users. It contains RSocket and RSocket-RPC implementations (plus RPC compiler) with vendor
+specific APIs and glue code to link protocol components together.
+<code>Platform libraries</code> are based on <code>Protocol components</code> and are configurable with <code>Transports</code> and <code>Shared modules</code>.</p>
+<h3 id="rsocket-jvm">RSocket-JVM</h3>
+<p><code>Protocol components</code> and <code>Shared modules</code> comprise core of the project that is foundational for each platform library.</p>
+<p><code>rsocket-jvm</code> assumes Java 8+ and depends on <code>netty-buffer</code> only.</p>
+<h3 id="rsocket---reactor">RSocket - Reactor</h3>
+<p>Chronologically is first project that emerged as result of researching for <a href="https://jauntsdn.github.io/post/rsocket-million-streams-2/">1 million streams (part2)</a>.</p>
+<p>It is based on <code>project-reactor</code> of <code>spring boot</code> framework.</p>
+<p>Comparing to original <code>rsocket/rsocket-java</code>, <code>rsocket-reactor</code> consumes 2x less CPU for same workloads, with virtually non-existent
+per message garbage.</p>
+<p>Numbers below are from runs on commodity box with linux 5.4.0 and TCP/EPOLL, OpenJDK 11.0.11.</p>
+<p>Single core request-response throughput, messages per second</p>
+<pre><code class="language-properties" data-lang="properties">08:34:32.638 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2153067
+08:34:33.638 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2142966
+08:34:34.638 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2144672
+08:34:35.638 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2153692
+08:34:36.638 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2137679
+</code></pre><p>Single core server-stream throughput, messages per second</p>
+<pre><code class="language-properties" data-lang="properties">08:39:17.839 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3567742
+08:39:18.839 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3575242
+08:39:19.839 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3577742
+08:39:20.839 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3587117
+08:39:21.839 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3577742
+</code></pre><p>Single core channel throughput, messages per second</p>
+<p>Client</p>
+<pre><code class="language-properties" data-lang="properties">08:39:01.915 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2333310
+08:39:02.938 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2411087
+08:39:03.915 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2333310
+08:39:04.923 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2411087
+08:39:05.943 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2411087
+</code></pre><p>Server</p>
+<pre><code class="language-properties" data-lang="properties">08:39:00.984 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.examples.channel.server.Main server received messages: 2411087
+08:39:01.979 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.examples.channel.server.Main server received messages: 2333310
+08:39:02.969 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.examples.channel.server.Main server received messages: 2333310
+08:39:03.978 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.examples.channel.server.Main server received messages: 2411087
+08:39:04.986 rsocket-netty-io-transport-epoll-1-2 com.jauntsdn.rsocket.examples.channel.server.Main server received messages: 2411087
+</code></pre><h3 id="rsocket-helidon">RSocket-Helidon</h3>
+<p>Project is based on <code>reactive-streams-common</code> from <a href="https://helidon.io/docs/v2/#/se/introduction/01_introduction">helidon se</a> - toolkit
+for rapid development of cloud java applications.</p>
+<p><code>reactive-streams-common</code> is JDK only reactive library using <code>Flow</code> from <code>java.util.concurrent</code> instead of <code>reactive-streams-jvm</code>,
+and has tight integration with JDK&rsquo;s <code>CompletableFutures</code>.</p>
+<p>It has relatively modest set of operators available out of the box, but custom ones are easy to implement.</p>
+<p>Initial evaluation with TCP transport demonstrated that <code>rsocket-helidon</code> performs slightly better than <code>rsocket-reactor</code>.
+At the same time <code>helidon-common-reactive</code> has considerably simpler internals compared to <code>project-reactor</code>.</p>
+<p>Numbers below are from runs on commodity box with linux 5.4.0 and TCP/EPOLL, running OpenJDK 11.0.11.</p>
+<p>Single core request-response throughput, messages per second</p>
+<pre><code class="language-properties" data-lang="properties">08:45:11.301 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2574258
+08:45:12.305 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2418647
+08:45:13.301 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2317546
+08:45:14.292 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2301992
+08:45:15.290 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2317546
+08:45:16.302 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.response.client.Main client received messages: 2356431
+</code></pre><p>Single core server-stream throughput, messages per second</p>
+<pre><code class="language-properties" data-lang="properties">08:54:05.186 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3757323
+08:54:06.186 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3767671
+08:54:07.186 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3762671
+08:54:08.186 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3758573
+08:54:09.186 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.stream.client.Main client received messages: 3765171
+</code></pre><p>Single core channel throughput, messages per second</p>
+<p>Client</p>
+<pre><code class="language-properties" data-lang="properties">08:53:33.035 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2566641
+08:53:34.016 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2488864
+08:53:35.027 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2566641
+08:53:36.008 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2566641
+08:53:37.012 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2644418
+</code></pre><p>Server</p>
+<pre><code class="language-properties" data-lang="properties">08:53:30.025 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2488864
+08:53:31.013 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2488864
+08:53:32.023 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2566641
+08:53:33.035 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2566641
+08:53:34.016 rsocket-netty-io-transport-epoll-1-1 com.jauntsdn.rsocket.examples.channel.client.Main client received messages: 2488864
+</code></pre><p>Server host CPU usage while running 1 million streams load test as described in <a href="https://jauntsdn.github.io/post/rsocket-million-streams-1/">first part of 1 million streams</a>:</p>
+<p>RSocket-helidon</p>
+<pre><code class="language-properties" data-lang="properties"> PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND  
+7435 maksym    20   0   15,1g   2,3g  28192 S 452,3   7,5  12:00.72 java  
+</code></pre><p>RSocket-reactor</p>
+<pre><code class="language-properties" data-lang="properties">PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND  
+6384 maksym    20   0   15,0g   2,6g  28088 S 538,9   8,4  13:02.96 java  
+</code></pre><p>On this workload <code>helidon-reactive-streams</code> consumes 20% less CPU time compared to <code>project-reactor</code>.</p>
+<h3 id="rsocket-rxjava-rsocket-smallrye-mutiny">RSocket-rxjava, RSocket-smallrye-mutiny</h3>
+<p>Both libraries have internals similar to <code>helidon-commons-reactive</code>, so throughput performance is rather close.</p>
+<h3 id="examples">Examples</h3>
+<p><a href="https://github.com/jauntsdn/rsocket-jvm-interop-examples">rsocket-jvm-interop-examples</a> is 4 vendor libraries
+interop demonstration (runtimes are stripped for now).</p>
+</div>
+
+    
+    
+    
+        <h4 class="page-header">Related</h4>
+         <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-summary/">📌 Summary: alternative RSocket library for high performance network applications on JVM</a></h4>
+    <h5>February 1, 2023</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-vs-spring/">Jaunt-RSocket-RPC, Spring-RSocket, GRPC: quantitative and qualitative comparison</a></h4>
+    <h5>September 3, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+
+
+</div>
+  <div class="item">
+
+    
+    
+    
+
+    
+    
+
+    <h4><a href="/post/rsocket-grpc/">Alternative RSocket-RPC: fast application services communication and transparent GRPC bridge</a></h4>
+    <h5>May 20, 2021</h5>
+    
+<a href="https://jauntsdn.github.io/tags/rsocket"><kbd class="item-tag">RSocket</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/mstreams"><kbd class="item-tag">Mstreams</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/java"><kbd class="item-tag">java</kbd></a>
+
+<a href="https://jauntsdn.github.io/tags/grpc"><kbd class="item-tag">grpc</kbd></a>
+
+
+
+</div>
+ 
+    
+
+    
+    
+
+</main>
+
+        <footer>
+            <p class="copyright text-muted">© Maksym Ostroverkhov</p>
+        </footer>
+
+        
+
+        
+    </body>
+
+</html>
+

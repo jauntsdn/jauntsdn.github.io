@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        .item_header {
+            color: #2196f3; font-weight: 400;
+            font-size: 16px; 
+            line-height:21px;
+            font-family: "Roboto Slab";
+        }
+        .item {
+            margin-bottom: 28px;
+            text-align: left;
+            line-height:21px;
+            font-size: 15px;
+            font-family: "Roboto Slab";
+            font-weight: 400;
+            color: #333333;
+        }
+        a {
+            color: #2196f3;
+        }
+    </style>
+<head>
+    <link rel="icon" href="/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway&Roboto&family=Roboto+Slab:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <title>Message-streams</title>
+    
+    
+</head>
+<body>
+<div id="header"
+     style="border-top: 2px solid #2196f3;
+            min-height: 37pt;position: fixed;
+            border-bottom: 1pt solid #e7e7e7;
+            background-color: #ffffff;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1030;">
+</div>
+<main style="
+    display: block;
+    margin: auto;
+    padding: 0pt;
+    max-width: 500pt;
+    box-sizing: border-box;
+    text-align: center;">
+    
+    <div style="transform: translateY(68pt);padding-bottom: 5pt;">
+        <div style="font-size: 24px; text-align: center; font-family: Raleway; margin-bottom: 30px;color:#757575">Software</div>    
+         
+         <div class="item">Collection of general purpose networking libraries used to implement RSocket-JVM, optimized mainly for throughput/latency performance.
+         </div>    
+
+         <div class="item"><span class="item_header">MESSAGE STREAMS / RSOCKET-JVM.</span> Very fast GRPC-like & GRPC-compatible 
+            services on JVM with rich streaming model over multiple network transports. <a href="https://github.com/jauntsdn/rsocket-jvm">[1]</a>.
+            Millions of requests/messages per core with each interaction model, million of simultaneous streams served with commodity PC.</div>    
+        <div class="item"><span class="item_header">NETTY-WEBSOCKET-HTTP1.</span> Alternative Netty implementation of RFC6455 - the WebSocket protocol. 
+            <a href="https://github.com/jauntsdn/netty-websocket-http1">[2]</a>. Its advantage is significant per-core throughput improvement (1.8 - 2x) for small frames in comparison to netty's out-of-the-box websocket 
+            codecs, and minimal heap allocations on frame path. Compatible with netty-websocket-http2.</div>
+        <div class="item"><span class="item_header">NETTY-WEBSOCKET-HTTP2.</span> Netty implementation of rfc8441 - bootstrapping websockets with http/2, and websocket multiprotocol support(http1, http2). 
+            <a href="https://github.com/jauntsdn/netty-websocket-http2">[3]</a>
+            . Library addresses 3 use cases: for application servers and clients, It is transparent use of existing http1 websocket handlers on top of http2 streams; for gateways/proxies, 
+            It is websockets-over-http2 support with no http1 dependencies and minimal overhead; for application servers, It provides transparent use of existing http1 websocket handlers to process both http1 and http2 websockets. Compatible with netty-websocket-http1.</div>    
+        <div class="item"><span class="item_header">NETTY-VMSOCKET.</span> Implementation of Netty channels for VM sockets (aka VSOCK address family) <a href="https://github.com/jauntsdn/netty-vmsocket">[4]</a>.</div>        
+        <a style="padding-bottom: 50px;" href="/" rel="next">
+            <i class="fa fa-arrow-up"></i>
+        </a>
+    </div>
+</main>
+</body>
+</html>
+
+
